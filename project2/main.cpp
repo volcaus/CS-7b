@@ -1,15 +1,12 @@
-/* CLEAN UP NOTES
-*
-* sizing of Grid
-* printing and allocating of Grid
-*/
-
 #include <iostream>
 #include <vector>
 #include <fstream>
 #include <string>
+#include <algorithm>
+#include <random>
 
 typedef std::vector<std::vector<std::string> > Grid;
+auto rng = std::default_random_engine {};
 
 bool isWord(std::string, bool);	// Checks if a vector<string>(3) is in the included 6-letter wordlist
 Grid genChemWords(std::vector<std::string>, bool);	// Used with the above function to make a 2d vector<string> of 6 letter words composed of chem symbols
@@ -17,14 +14,14 @@ void populateSymbols(std::vector<std::string>&);	// Puts 48 chem symbols into a 
 Grid populateGrid(Grid, Grid);	// Uses the generated chemWords to make a 2d vector<string> in a 3x3 grid so that every row and column is a unique chemword
 std::string printGrid(Grid, int, int = 0);	// Prints the result of above function
 bool isChemWord(std::string, Grid, int = 3);	// Checks if a concatenation of 3 chem symbols is in the given wordlist
-void clearGrid(Grid&);	// Empties any 2d vector<string>
+void clearGrid(Grid&);	// Empties any 2d vector<string> (i.e. a Grid)
 bool notUsed(Grid, std::vector<std::string>);	// Checks if a given chemWord is already used in the 3x3 grid
 
 int main()
 {
 	std::vector<std::string> symbols;
 	Grid g(3, std::vector<std::string>(3)), chemWords;
-	bool fileCheck = 0;
+	bool fileCheck = 0, again = 1;
 
 	populateSymbols(symbols);
 
@@ -47,11 +44,17 @@ int main()
 
 	chemWords = genChemWords(symbols, fileCheck);
 
-	std::cout << "Working on a solution...\n";
 
-	g = populateGrid(g, chemWords);
+	do
+	{	
+		std::cout << "Working on a solution...\n";
+		g = populateGrid(g, chemWords);
 
-	std::cout << std::endl << printGrid(g, g.size());
+		std::cout << std::endl << printGrid(g, g.size());
+
+		std:: cout << "Find another solution? (0 - no, 1 - yes): ";
+		std::cin >> again;
+	}while(again);
 
 	std::cin.get();
 
@@ -85,7 +88,7 @@ Grid genChemWords(std::vector<std::string> vec, bool fileCheck)	// Takes vector<
 	return chemW;
 }
 
-bool isWord(std::string word, bool fileCheck)
+bool isWord(std::string word, bool fileCheck) // Checks given word for validity using provided wordlist
 {
 	std::ifstream inFile;
 
@@ -108,6 +111,7 @@ bool isWord(std::string word, bool fileCheck)
 }
 
 bool isChemWord(std::string str, Grid g, int condition)
+// Checks concatenation of chemical symbols against wordlist
 {
 	switch (condition)
 	{
@@ -126,7 +130,7 @@ bool isChemWord(std::string str, Grid g, int condition)
 	return false;
 }
 
-void clearGrid(Grid& g)
+void clearGrid(Grid& g) // Clears 2d vectors (or Grids)
 {
 	for (size_t i = 0; i < g.size(); ++i)
 	{
@@ -154,6 +158,7 @@ Grid populateGrid(Grid g, Grid chemW)
 	{
 		clearGrid(g);
 		clearGrid(used);
+		std::shuffle(std::begin(chemW), std::end(chemW), rng);
 
 		for (auto i : chemW)	// First row (random)
 		{
@@ -168,8 +173,8 @@ Grid populateGrid(Grid g, Grid chemW)
 			if (samesies0.empty())
 				continue;
 
-			for (auto k : samesies0)	// First column (based on first element
-				if (k != g[0])			// of first row)
+			for (auto k : samesies0)	// First column (based on first element of first row)
+				if (k != g[0])			
 				{
 					g[1][0] = k[1];
 					g[2][0] = k[2];
@@ -183,11 +188,10 @@ Grid populateGrid(Grid g, Grid chemW)
 					if (samesies1.empty())
 						continue;
 
-					for (auto m : samesies1)
+					for (auto m : samesies1)  // Second column (based on second element of first row)
 						if (g[1][0] != m[1] && g[2][0] != m[2] &&
 							isChemWord(g[1][0] + m[1], chemW, 2) &&
-							isChemWord(g[2][0] + m[2], chemW, 2) &&
-							notUsed(used, m))// Second column (based on second element of first row)
+							isChemWord(g[2][0] + m[2], chemW, 2) ) 
 						{
 							g[1][1] = m[1];
 							g[2][1] = m[2];
@@ -221,7 +225,9 @@ Grid populateGrid(Grid g, Grid chemW)
 }
 
 
-std::string printGrid(Grid g, int size, int n)
+std::string printGrid(Grid g, int size, int n) 
+// recursive function to print each cell of a 2d vector
+// as a single string in a 3 by 3  fashion
 {
 	if (n == size)
 		return "";
