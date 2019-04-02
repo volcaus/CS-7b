@@ -1,6 +1,7 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
 #include <vector>
+#include "complx.h"
 
 void underConstruction(sf::RenderWindow&);
 void textAnimation(sf::Text&, bool&, int&);
