@@ -13,3 +13,10 @@ Project 2: Creating a 3x3 grid of 6-letter words using 2-letter chemical symbols
 	Completion: ~90%
 	
 	Notes: Works as expected, but very messy. Needs cleaning up.
+
+
+Project 3: SFML complex numbers excercises
+
+	Completion: ~10%
+	
+	Notes: Only the menu visuals have been done; no actual functionality has been implemented yet.
