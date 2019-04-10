@@ -107,8 +107,9 @@ int mainMenu(sf::RenderWindow& window, sf::Font fnt)
 
 	while (!quit)
 	{
-		std::vector<sf::Text> menu (5, sf::Text ("Option", fnt, 30)); // Vector of sf::Text objects
-		sf::FloatRect textRect0 = menu[0].getLocalBounds();			// for the main menu
+		std::vector<sf::Text> menu (5, sf::Text ("Option", fnt, 30)); 
+		// Vector of sf::Text objects for the main menu
+		
 		sf::Vector2u screenSize = window.getSize(); // getting size of window again in case of a resize
 
 	/* The following proccess will be used repeatedly in order to set the origin
