@@ -1,3 +1,4 @@
+#include <cmath>
 #include "complx.h"
 
 Complx::Complx(double re, double im) //ctor
@@ -6,22 +7,22 @@ Complx::Complx(double re, double im) //ctor
     imagNum = im;
 }
 
-double Complx::real()
+double Complx::real() // returns realNum for Complx object that calls this
 {
     return realNum;
 }
 
-void Complx::real(double re)
+void Complx::real(double re) // sets realNum for Complx object that calls this
 {
     realNum = re;
 }
 
-double Complx::imag()
+double Complx::imag() // returns imagNum for Complx object that calls this
 {
     return imagNum;
 }
 
-void Complx::imag(double im)
+void Complx::imag(double im) // sets imagNum for Complx object that calls this
 {
     imagNum = im;
 }
@@ -34,6 +35,11 @@ Complx Complx::conj() // returns conjugate of the Complx object that calls it
     n.imag(this -> imagNum * -1);
 
     return n;
+}
+
+double Complx::abs()
+{
+    return sqrt(this->realNum*this->realNum + this->imagNum*this->imagNum);
 }
 
 std::ostream& operator<<(std::ostream& os, const Complx& cNum)

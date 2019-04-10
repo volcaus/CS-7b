@@ -3,30 +3,33 @@
 #include <vector>
 #include "complx.h"
 
-void underConstruction(sf::RenderWindow&);
-void textAnimation(sf::Text&, bool&, int&);
-int mainMenu(sf::RenderWindow&, sf::Font);
-void additionMenu(sf::RenderWindow&, sf::Font);
-void subtractionMenu(sf::RenderWindow&, sf::Font);
-void multiplicationMenu(sf::RenderWindow&, sf::Font);
-void divisionMenu(sf::RenderWindow&, sf::Font);
+void underConstruction(sf::RenderWindow&); // placeholder function for unfinished menu selections
+void textAnimation(sf::Text&, bool&, int&); // self-explanatory
+int mainMenu(sf::RenderWindow&, sf::Font); // looped main menu that calls the following functions
+void additionMenu(sf::RenderWindow&, sf::Font); // Allows playing with the Complx class
+void subtractionMenu(sf::RenderWindow&, sf::Font); // Allows playing with the Complx class
+void multiplicationMenu(sf::RenderWindow&, sf::Font); // Allows playing with the Complx class
+void divisionMenu(sf::RenderWindow&, sf::Font); // Allows playing with the Complx class
 
 int main()
 {
 	sf::RenderWindow window(sf::VideoMode(600, 600), "SFML APP", sf::Style::Close | sf::Style::Resize);
 	window.setFramerateLimit(60);
-//	window.setKeyRepeatEnabled(false);
+
 	sf::Vector2u screenSize = window.getSize();
+	
 	sf::Font fnt;
 	fnt.loadFromFile("fnt/Sansation-Bold.ttf");
-	bool fade = 1;
-	int alpha = 250;
+
+	bool fade = 1; // used for fading animation of text
+	int alpha = 250; // as above so below
 
 	sf::Text beginText("PRESS SPACE", fnt, 30);
 	sf::FloatRect beginTextRect = beginText.getLocalBounds();
-	beginText.setOrigin(beginTextRect.left + beginTextRect.width / 2.0f,
-						beginTextRect.top + beginTextRect.height / 2.0f);
-	beginText.setPosition(sf::Vector2f(screenSize.x/2.0f, screenSize.y/2.0f));
+	beginText.setOrigin(beginTextRect.left + beginTextRect.width / 2.0f, // Sets origin of text to the center
+		beginTextRect.top + beginTextRect.height / 2.0f);								// of its container
+
+	beginText.setPosition(sf::Vector2f(screenSize.x/2.0f, screenSize.y/2.0f)); // centers text relative to screen
 
 
 	while (window.isOpen())
@@ -40,8 +43,8 @@ int main()
 			if (event.type == sf::Event::KeyPressed)
 				if (event.key.code == sf::Keyboard::Space)
 				{
-					switch (mainMenu(window, fnt))
-					{
+					switch (mainMenu(window, fnt)) // Calls mainMenu which returns user selection
+					{														// which will call one of the following
 					case 0:
 						underConstruction(window);
 						//additionMenu(window, fnt);
@@ -67,7 +70,7 @@ int main()
 				}
 		}
 
-		textAnimation(beginText, fade, alpha);
+		textAnimation(beginText, fade, alpha); // Used only for the splash screen text (currently)
 
 
 		window.clear();
@@ -104,24 +107,51 @@ int mainMenu(sf::RenderWindow& window, sf::Font fnt)
 
 	while (!quit)
 	{
-		std::vector<sf::Text> menu (5, sf::Text ("Option", fnt, 30));
-		sf::FloatRect textRect = menu[0].getLocalBounds();
-		sf::Vector2u screenSize = window.getSize();
+		std::vector<sf::Text> menu (5, sf::Text ("Option", fnt, 30)); // Vector of sf::Text objects
+		sf::FloatRect textRect0 = menu[0].getLocalBounds();			// for the main menu
+		sf::Vector2u screenSize = window.getSize(); // getting size of window again in case of a resize
+
+	/* The following proccess will be used repeatedly in order to set the origin
+		of certain elements to the center of their bounds. Essentially you create 
+		a rect with the bounds of the object whose origin you want centered. 
+		You can use those values to offset  the origin of said object.
+	*/
 
 		sf::FloatRect menuRect (sf::Vector2f(screenSize.x - screenSize.x,
-													screenSize.y - (2*screenSize.y)/3),
-													sf::Vector2f(screenSize.x, screenSize.y/3));
+			screenSize.y - (2*screenSize.y)/3), sf::Vector2f(screenSize.x, screenSize.y/3));
+	
+	menu[0].setString("Addition"); // Setting the text per Text object
+	menu[1].setString("Subtraction");
+	menu[2].setString("Multiplication");
+	menu[3].setString("Division");
+	menu[4].setString("Quit");
 
-	menu[0].setOrigin(textRect.left + textRect.width/2.0f, textRect.top + textRect.height/2.0f);
+	sf::FloatRect textRect0 = menu[0].getLocalBounds(); // Now that the Text objects have the desired
+	sf::FloatRect textRect1 = menu[1].getLocalBounds(); // strings we can construct the rects as described above
+	sf::FloatRect textRect2 = menu[2].getLocalBounds(); // because they now have their final size/bounds
+	sf::FloatRect textRect3 = menu[3].getLocalBounds();
+	sf::FloatRect textRect4 = menu[4].getLocalBounds();
+
+	menu[0].setOrigin(textRect0.left + textRect0.width/2.0f, textRect0.top + textRect0.height/2.0f);
 	menu[0].setPosition(sf::Vector2f(screenSize.x/4, menuRect.top + menuRect.top/6));
-	menu[1].setOrigin(textRect.left + textRect.width/2.0f, textRect.top + textRect.height/2.0f);
+	menu[1].setOrigin(textRect1.left + textRect1.width/2.0f, textRect1.top + textRect1.height/2.0f);
 	menu[1].setPosition(sf::Vector2f(3*screenSize.x/4, menuRect.top + menuRect.top/6));
-	menu[2].setOrigin(textRect.left + textRect.width/2.0f, textRect.top + textRect.height/2.0f);
+	menu[2].setOrigin(textRect2.left + textRect2.width/2.0f, textRect2.top + textRect2.height/2.0f);
 	menu[2].setPosition(sf::Vector2f(screenSize.x/4, menuRect.top + menuRect.top/2));
-	menu[3].setOrigin(textRect.left + textRect.width/2.0f, textRect.top + textRect.height/2.0f);
+	menu[3].setOrigin(textRect3.left + textRect3.width/2.0f, textRect3.top + textRect3.height/2.0f);
 	menu[3].setPosition(sf::Vector2f(3*screenSize.x/4, menuRect.top + menuRect.top/2));
-	menu[4].setOrigin(textRect.left + textRect.width/2.0f, textRect.top + textRect.height/2.0f);
+	menu[4].setOrigin(textRect4.left + textRect4.width/2.0f, textRect4.top + textRect4.height/2.0f);
 	menu[4].setPosition(sf::Vector2f(screenSize.x/2, menuRect.top + (5*menuRect.top/6)));
+
+	/* 
+		The following loop is used to check for user input.
+		The options are aligned in 2 columns with each
+		option reffered to by an "int selection" value.
+		The top left option is 0, moving left to right and top to bottom
+		each move should ellicit a selection++. Any selection immediately 
+		below a selection, n, will be n+2. So a keypress of down ellicits
+		a selection += 2, and a keypress of up, selection -= 2.
+	*/
 
 	while (window.pollEvent(menuEvent))
 	{
@@ -130,39 +160,39 @@ int mainMenu(sf::RenderWindow& window, sf::Font fnt)
 			if (menuEvent.key.code == sf::Keyboard::Right)
 			{
 				selection++;
-				if (selection >= 4)
+				if (selection >= 4) // max selection is currently 4
 					selection = 4;
 			}
 			if (menuEvent.key.code  == sf::Keyboard::Left)
 			{
 				selection--;
-				if (selection <= 0)
+				if (selection <= 0) // min selection is always 0
 					selection = 0;
 			}
 			if (menuEvent.key.code == sf::Keyboard::Down)
 			{
 				selection += 2;
-				if (selection >= 4)
+				if (selection >= 4) // max selection is currently 4
 					selection = 4;
 			}
 			if (menuEvent.key.code  == sf::Keyboard::Up)
 			{
 				selection -= 2;
-				if (selection <= 0)
+				if (selection <= 0) // min selection is always 0
 					selection = 0;
 			}
-			if(menuEvent.key.code == sf::Keyboard::Space)
-				return selection;
+			if(menuEvent.key.code == sf::Keyboard::Space) // pressing space returns the hovered
+				return selection;													// selections int value
 		}
 	}
 
-	for (sf::Text i : menu)
+	for (sf::Text i : menu)	// sets all text to white
 		i.setFillColor(sf::Color::White);
 
-	menu[selection].setFillColor(sf::Color::Red);
+	menu[selection].setFillColor(sf::Color::Red); // but this then sets hovered selection to red
 
 	window.clear();
-	for (sf::Text i : menu)
+	for (sf::Text i : menu) // draws all text objects in the vector
 		window.draw(i);
 
 	window.display();
