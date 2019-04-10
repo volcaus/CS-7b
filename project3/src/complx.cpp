@@ -26,6 +26,16 @@ void Complx::imag(double im)
     imagNum = im;
 }
 
+Complx Complx::conj() // returns conjugate of the Complx object that calls it
+{
+    Complx n;
+
+    n.real(this -> realNum);
+    n.imag(this -> imagNum * -1);
+
+    return n;
+}
+
 std::ostream& operator<<(std::ostream& os, const Complx& cNum)
 {
         os << cNum.realNum << ", " << cNum.imagNum << 'i';

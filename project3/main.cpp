@@ -6,6 +6,10 @@
 void underConstruction(sf::RenderWindow&);
 void textAnimation(sf::Text&, bool&, int&);
 int mainMenu(sf::RenderWindow&, sf::Font);
+void additionMenu(sf::RenderWindow&, sf::Font);
+void subtractionMenu(sf::RenderWindow&, sf::Font);
+void multiplicationMenu(sf::RenderWindow&, sf::Font);
+void divisionMenu(sf::RenderWindow&, sf::Font);
 
 int main()
 {
@@ -39,19 +43,23 @@ int main()
 					switch (mainMenu(window, fnt))
 					{
 					case 0:
-						window.close();
+						underConstruction(window);
+						//additionMenu(window, fnt);
 						break;
 					case 1:
 						underConstruction(window);
+						//subtractionMenu(window, fnt);
 						break;
 					case 2:
 						underConstruction(window);
+						//multiplicationMenu(window, fnt);
 						break;
 					case 3:
 						underConstruction(window);
+						//divisionMenu(window, fnt);
 						break;
 					case 4:
-						underConstruction(window);
+						window.close();
 						break;
 					default:
 						break;
@@ -143,6 +151,8 @@ int mainMenu(sf::RenderWindow& window, sf::Font fnt)
 				if (selection <= 0)
 					selection = 0;
 			}
+			if(menuEvent.key.code == sf::Keyboard::Space)
+				return selection;
 		}
 	}
 
