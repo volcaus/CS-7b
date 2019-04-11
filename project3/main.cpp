@@ -5,15 +5,15 @@
 
 void underConstruction(sf::RenderWindow&); // placeholder function for unfinished menu selections
 void textAnimation(sf::Text&, bool&, int&); // self-explanatory
-int mainMenu(sf::RenderWindow&, sf::Font); // looped main menu that calls the following functions
-void additionMenu(sf::RenderWindow&, sf::Font); // Allows playing with the Complx class
-void subtractionMenu(sf::RenderWindow&, sf::Font); // Allows playing with the Complx class
-void multiplicationMenu(sf::RenderWindow&, sf::Font); // Allows playing with the Complx class
-void divisionMenu(sf::RenderWindow&, sf::Font); // Allows playing with the Complx class
+int mainMenu(sf::RenderWindow&, sf::Font&); // looped main menu that calls the following functions
+void additionMenu(sf::RenderWindow&, sf::Font&); // Allows playing with the Complx class
+void subtractionMenu(sf::RenderWindow&, sf::Font&); // Allows playing with the Complx class
+void multiplicationMenu(sf::RenderWindow&, sf::Font&); // Allows playing with the Complx class
+void divisionMenu(sf::RenderWindow&, sf::Font&); // Allows playing with the Complx class
 
 int main()
 {
-	sf::RenderWindow window(sf::VideoMode(600, 600), "SFML APP", sf::Style::Close | sf::Style::Resize);
+	sf::RenderWindow window(sf::VideoMode(600, 600), "SFML APP", sf::Style::Close);
 	window.setFramerateLimit(60);
 
 	sf::Vector2u screenSize = window.getSize();
@@ -46,8 +46,8 @@ int main()
 					switch (mainMenu(window, fnt)) // Calls mainMenu which returns user selection
 					{														// which will call one of the following
 					case 0:
-						underConstruction(window);
-						//additionMenu(window, fnt);
+						//underConstruction(window);
+						additionMenu(window, fnt);
 						break;
 					case 1:
 						underConstruction(window);
@@ -99,7 +99,7 @@ void textAnimation(sf::Text& text, bool& fade, int& alpha)
 
 }
 
-int mainMenu(sf::RenderWindow& window, sf::Font fnt)
+int mainMenu(sf::RenderWindow& window, sf::Font& fnt)
 {
 	int selection = 0;
 	bool quit = 0;
@@ -214,4 +214,57 @@ void underConstruction(sf::RenderWindow& window)
 							textRect.top + textRect.height / 2.0f);
 	text.setPosition(sf::Vector2f(screenSize.x/2.0f, screenSize.y/2.0f));
 
+}
+
+void additionMenu(sf::RenderWindow& window, sf::Font& fnt)
+{
+	bool quit = 0;
+	int selection = 0;
+
+	sf::Vector2u screenSize = window.getSize();
+
+	while(!quit)
+	{
+		sf::RectangleShape textBox(sf::Vector2f(3*screenSize.x/4, screenSize.y/12));
+		sf::Event addEvent;
+		std::string str = "";
+		sf::Text input(str, fnt, 20U);
+
+		textBox.setFillColor(sf::Color::White);
+		textBox.setOrigin(sf::Vector2f(textBox.getSize().x/2, textBox.getSize().y/2));
+		textBox.setPosition(sf::Vector2f(screenSize.x/2, screenSize.y/2));
+
+		input.setPosition(textBox.getOrigin());
+
+		while (window.pollEvent(addEvent))
+		{
+			if (addEvent.type == sf::Event::KeyPressed)
+			{
+				if (addEvent.key.code == sf::Keyboard::Down)
+				{
+					selection += 1;
+					if (selection > 1)
+						selection = 1;
+				}
+				else if(addEvent.key.code == sf::Keyboard::Up)
+				{
+					selection -= 1;
+					if (selection < 0)
+						selection = 0;
+				}
+				else if (selection == 0)
+				{
+					getline(std::cin, str);
+					input.setString(str);
+				}
+			}
+		}
+
+
+
+	window.clear();
+	window.draw(textBox);
+	window.draw(input);
+	window.display();
+	}
 }
