@@ -2,6 +2,7 @@
 #include <iostream>
 #include <vector>
 #include <sstream>
+#include <regex>
 #include "complx.h"
 
 void underConstruction(sf::RenderWindow&); // placeholder function for unfinished menu selections
@@ -221,22 +222,34 @@ void additionMenu(sf::RenderWindow& window, sf::Font& fnt)
 {
 	bool quit = 0;
 	int selection = 0;
-	std::string str = "";
+		sf::Event addEvent;
+		std::string str = "";
+		sf::Vector2u screenSize = window.getSize();
+		sf::RectangleShape textBox(sf::Vector2f(3*screenSize.x/4, screenSize.y/12));
 
 
 	while(!quit)
 	{
-		sf::Event addEvent;
 		sf::Vector2u screenSize = window.getSize();
-		sf::RectangleShape textBox(sf::Vector2f(3*screenSize.x/4, screenSize.y/12));
 		sf::Text input(str, fnt, 20U);
-		input.setFillColor(sf::Color::Red);
+		sf::Text header("Enter an expression in the form: (a, bi) + (c, di)", fnt, 30u);
+		sf::FloatRect headerRect(header.getLocalBounds());
+		sf::FloatRect textRect(input.getLocalBounds());
+		header.setStyle(sf::Text::Style::Bold);
+		header.setFillColor(sf::Color::White);
+		input.setFillColor(sf::Color::Black);
 
-		textBox.setFillColor(sf::Color::White);
+		//textBox.setFillColor(sf::Color::White);
 		textBox.setOrigin(sf::Vector2f(textBox.getSize().x/2, textBox.getSize().y/2));
 		textBox.setPosition(sf::Vector2f(screenSize.x/2, screenSize.y/2));
 
-		input.setOrigin(sf::Vector2f(input.getScale().x/2,input.getScale().y/2));
+		header.setOrigin(headerRect.left + headerRect.width/2.0f, // Aforementioned text centering
+			headerRect.top + headerRect.height/2.0f);				// protocol
+		
+		input.setOrigin(textRect.left + textRect.width/2.0f,	// Text centering protocol
+			textRect.top + textRect.height/2.0f);
+		
+		header.setPosition(screenSize.x/2.0f,screenSize.y/3.0f);
 		input.setPosition(screenSize.x/2,screenSize.y/2);
 
 		while (window.pollEvent(addEvent))
@@ -245,18 +258,22 @@ void additionMenu(sf::RenderWindow& window, sf::Font& fnt)
 			{
 				if (addEvent.key.code == sf::Keyboard::Down)
 				{
+					textBox.setFillColor(sf::Color(200,200,200,255));
+
 					selection += 1;
 					if (selection > 1)
 						selection = 1;
 				}
 				else if(addEvent.key.code == sf::Keyboard::Up)
 				{
+					textBox.setFillColor(sf::Color::White);
+
 					selection -= 1;
 					if (selection < 0)
 						selection = 0;
 				}
 			}
-			if (addEvent.type == sf::Event::TextEntered)
+			if (addEvent.type == sf::Event::TextEntered && selection == 0)
 			{
 				if (addEvent.text.unicode == 8 && !str.empty())
 					str.pop_back();
