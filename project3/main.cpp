@@ -1,6 +1,7 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
 #include <vector>
+#include <sstream>
 #include "complx.h"
 
 void underConstruction(sf::RenderWindow&); // placeholder function for unfinished menu selections
@@ -220,21 +221,23 @@ void additionMenu(sf::RenderWindow& window, sf::Font& fnt)
 {
 	bool quit = 0;
 	int selection = 0;
+	std::string str = "";
 
-	sf::Vector2u screenSize = window.getSize();
 
 	while(!quit)
 	{
-		sf::RectangleShape textBox(sf::Vector2f(3*screenSize.x/4, screenSize.y/12));
 		sf::Event addEvent;
-		std::string str = "";
+		sf::Vector2u screenSize = window.getSize();
+		sf::RectangleShape textBox(sf::Vector2f(3*screenSize.x/4, screenSize.y/12));
 		sf::Text input(str, fnt, 20U);
+		input.setFillColor(sf::Color::Red);
 
 		textBox.setFillColor(sf::Color::White);
 		textBox.setOrigin(sf::Vector2f(textBox.getSize().x/2, textBox.getSize().y/2));
 		textBox.setPosition(sf::Vector2f(screenSize.x/2, screenSize.y/2));
 
-		input.setPosition(textBox.getOrigin());
+		input.setOrigin(sf::Vector2f(input.getScale().x/2,input.getScale().y/2));
+		input.setPosition(screenSize.x/2,screenSize.y/2);
 
 		while (window.pollEvent(addEvent))
 		{
@@ -252,9 +255,14 @@ void additionMenu(sf::RenderWindow& window, sf::Font& fnt)
 					if (selection < 0)
 						selection = 0;
 				}
-				else if (selection == 0)
+			}
+			if (addEvent.type == sf::Event::TextEntered)
+			{
+				if (addEvent.text.unicode == 8 && !str.empty())
+					str.pop_back();
+				if (addEvent.text.unicode < 128 && isalpha(static_cast<char>(addEvent.text.unicode)))
 				{
-					getline(std::cin, str);
+					str += static_cast<char>(addEvent.text.unicode);
 					input.setString(str);
 				}
 			}
