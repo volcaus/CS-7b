@@ -1,21 +1,28 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
 #include <vector>
+#include <string>
 #include <sstream>
 #include <regex>
 #include "complx.h"
 
 void underConstruction(sf::RenderWindow&); // placeholder function for unfinished menu selections
 void textAnimation(sf::Text&, bool&, int&); // self-explanatory
+
 int mainMenu(sf::RenderWindow&, sf::Font&); // looped main menu that calls the following functions
 void additionMenu(sf::RenderWindow&, sf::Font&); // Allows playing with the Complx class
 void subtractionMenu(sf::RenderWindow&, sf::Font&); // Allows playing with the Complx class
 void multiplicationMenu(sf::RenderWindow&, sf::Font&); // Allows playing with the Complx class
 void divisionMenu(sf::RenderWindow&, sf::Font&); // Allows playing with the Complx class
 
+Complx addComplx(std::string);
+Complx subComplx(std::string);
+Complx mulComplx(std::string);
+Complx divComplx(std::string);
+
 int main()
 {
-	sf::RenderWindow window(sf::VideoMode(600, 600), "SFML APP", sf::Style::Close);
+	sf::RenderWindow window(sf::VideoMode(600, 600), "SFML APP", sf::Style::Close || sf::Style::Resize);
 	window.setFramerateLimit(60);
 
 	sf::Vector2u screenSize = window.getSize();
@@ -48,20 +55,16 @@ int main()
 					switch (mainMenu(window, fnt)) // Calls mainMenu which returns user selection
 					{														// which will call one of the following
 					case 0:
-						//underConstruction(window);
 						additionMenu(window, fnt);
 						break;
 					case 1:
-						underConstruction(window);
-						//subtractionMenu(window, fnt);
+						subtractionMenu(window, fnt);
 						break;
 					case 2:
-						underConstruction(window);
-						//multiplicationMenu(window, fnt);
+						multiplicationMenu(window, fnt);
 						break;
 					case 3:
-						underConstruction(window);
-						//divisionMenu(window, fnt);
+						divisionMenu(window, fnt);
 						break;
 					case 4:
 						window.close();
@@ -206,78 +209,139 @@ int mainMenu(sf::RenderWindow& window, sf::Font& fnt)
 
 void underConstruction(sf::RenderWindow& window)
 {
-	sf::Font fnt;
-	sf::Vector2u screenSize = window.getSize();
-	fnt.loadFromFile("fnt/Sansation-Bold.ttf");
-
-	sf::Text text("UNDER CONSTRUCTION", fnt, 30);
-	sf::FloatRect textRect = text.getLocalBounds();
-	text.setOrigin(textRect.left + textRect.width / 2.0f,
-							textRect.top + textRect.height / 2.0f);
-	text.setPosition(sf::Vector2f(screenSize.x/2.0f, screenSize.y/2.0f));
 
 }
 
 void additionMenu(sf::RenderWindow& window, sf::Font& fnt)
 {
 	bool quit = 0;
-	int selection = 0;
-		sf::Event addEvent;
-		std::string str = "";
-		sf::Vector2u screenSize = window.getSize();
-		sf::RectangleShape textBox(sf::Vector2f(3*screenSize.x/4, screenSize.y/12));
+	int selection = 0; // Used for traversing the menu GUI
+	Complx cnum;
+
+	// This regular expression takes an addition expression in terms of 2 complex #'s
+	std::regex regx("^\\s*\\(?\\d+[,]\\d*[i]?\\)?\\s?[+]\\s?\\(?\\d+[,]\\d*[i]?\\)?\\s*$");
+	
+	// Used to detect user input
+	sf::Event addEvent;
+
+	// Used to hold user input
+	std::string str;
+	std::stringstream sstr;
+	sstr.str("");
+	sstr.clear();
+
+	sf::Vector2u screenSize = window.getSize();
+	sf::Text header("Enter an expression in the form: (a, bi) + (c, di)", fnt, 23U);
+	sf::RectangleShape textBox(sf::Vector2f(3*screenSize.x/4, screenSize.y/12));
+	sf::RectangleShape quitButton(sf::Vector2f(3*screenSize.x/10, screenSize.y/12));
+	sf::RectangleShape submitButton(sf::Vector2f(3*screenSize.x/10, screenSize.y/12));
+	sf::Text submitText("SUBMIT", fnt, 20U);
+	sf::Text quitText("BACK", fnt, 20U);
+	sf::Text input(str, fnt, 20U);
 
 
 	while(!quit)
 	{
-		sf::Vector2u screenSize = window.getSize();
-		sf::Text input(str, fnt, 20U);
-		sf::Text header("Enter an expression in the form: (a, bi) + (c, di)", fnt, 30u);
+		// Most of the following is inside the main loop in case of a window re-size
+		screenSize = window.getSize();
+		textBox.setSize(sf::Vector2f(3*screenSize.x/4, screenSize.y/12));
+		quitButton.setSize(sf::Vector2f(3*screenSize.x/10, screenSize.y/12));
+		submitButton.setSize(sf::Vector2f(3*screenSize.x/10, screenSize.y/12));
+		input.setString(str);
 		sf::FloatRect headerRect(header.getLocalBounds());
 		sf::FloatRect textRect(input.getLocalBounds());
+		sf::FloatRect quitRect(quitText.getLocalBounds());
+		sf::FloatRect submitRect(submitText.getLocalBounds());
 		header.setStyle(sf::Text::Style::Bold);
 		header.setFillColor(sf::Color::White);
 		input.setFillColor(sf::Color::Black);
+		quitText.setFillColor(sf::Color::Black);
+		submitText.setFillColor(sf::Color::Black);
 
-		//textBox.setFillColor(sf::Color::White);
+		// Setting the positions of the rectangle objects
 		textBox.setOrigin(sf::Vector2f(textBox.getSize().x/2, textBox.getSize().y/2));
 		textBox.setPosition(sf::Vector2f(screenSize.x/2, screenSize.y/2));
 
-		header.setOrigin(headerRect.left + headerRect.width/2.0f, // Aforementioned text centering
-			headerRect.top + headerRect.height/2.0f);				// protocol
+		submitButton.setOrigin(sf::Vector2f(submitButton.getSize().x/2, submitButton.getSize().y/2));
+		submitButton.setPosition(sf::Vector2f(screenSize.x/3, 2*screenSize.y/3));
+
+		quitButton.setOrigin(sf::Vector2f(quitButton.getSize().x/2, quitButton.getSize().y/2));
+		quitButton.setPosition(sf::Vector2f(2*screenSize.x/3, 2*screenSize.y/3));
+
+		// Aforementioned text-centering protocol
+		header.setOrigin(headerRect.left + headerRect.width/2.0f,
+			headerRect.top + headerRect.height/2.0f);
 		
-		input.setOrigin(textRect.left + textRect.width/2.0f,	// Text centering protocol
+		input.setOrigin(textRect.left + textRect.width/2.0f,
 			textRect.top + textRect.height/2.0f);
+
+		quitText.setOrigin(quitRect.left + quitRect.width/2.0f,
+			quitRect.top + quitRect.height/2.0f);
+
+		submitText.setOrigin(submitRect.left + submitRect.width/2.0f,
+			submitRect.top + submitRect.height/2.0f);
 		
+		// Setting the position of text objects
 		header.setPosition(screenSize.x/2.0f,screenSize.y/3.0f);
 		input.setPosition(screenSize.x/2,screenSize.y/2);
+		submitText.setPosition(screenSize.x/3, 2*screenSize.y/3);
+		quitText.setPosition(2*screenSize.x/3, 2*screenSize.y/3);
 
+		// This entire loop is for user input by keyboard
 		while (window.pollEvent(addEvent))
 		{
 			if (addEvent.type == sf::Event::KeyPressed)
 			{
-				if (addEvent.key.code == sf::Keyboard::Down)
+				if (addEvent.key.code == sf::Keyboard::Down || addEvent.key.code == sf::Keyboard::Right)
 				{
-					textBox.setFillColor(sf::Color(200,200,200,255));
-
 					selection += 1;
-					if (selection > 1)
-						selection = 1;
+					if (selection > 2)
+						selection = 2;
 				}
-				else if(addEvent.key.code == sf::Keyboard::Up)
+				else if(addEvent.key.code == sf::Keyboard::Up || addEvent.key.code == sf::Keyboard::Left)
 				{
-					textBox.setFillColor(sf::Color::White);
-
 					selection -= 1;
 					if (selection < 0)
 						selection = 0;
 				}
+				else if(addEvent.key.code == sf::Keyboard::Space || addEvent.key.code == sf::Keyboard::Enter)
+				{
+					switch (selection)
+					{
+					case 0:
+						break;
+					case 1:
+						if(!regex_match(str,regx))
+						{
+							str = "Incorrect form";
+							break;
+						}
+						else if (regex_match(str, regx))
+						{
+							cnum = addComplx(str);
+							sstr << cnum;
+							str = sstr.str();
+							break;
+						}
+					case 2:
+						quit = 1;
+						break;
+					default:
+						break;
+					}
+				}
 			}
+			// This will take any unicode character input by the user and append it (barring a backspace)
+			// to the input std::string as long as if fits the character criteria (ASCII 32-127)
 			if (addEvent.type == sf::Event::TextEntered && selection == 0)
 			{
 				if (addEvent.text.unicode == 8 && !str.empty())
+				{
+					sstr.str("");
+					sstr.clear();
 					str.pop_back();
-				if (addEvent.text.unicode < 128 && isalpha(static_cast<char>(addEvent.text.unicode)))
+				}
+				if (addEvent.text.unicode < 128 && addEvent.text.unicode > 31) 
 				{
 					str += static_cast<char>(addEvent.text.unicode);
 					input.setString(str);
@@ -285,11 +349,737 @@ void additionMenu(sf::RenderWindow& window, sf::Font& fnt)
 			}
 		}
 
+	// Colorizes the text box and buttons as per what is selected
+	switch (selection)
+	{
+	case 0:
+		textBox.setFillColor(sf::Color::White);
+		submitButton.setFillColor(sf::Color(125,125,125,255));
+		quitButton.setFillColor(sf::Color(125,125,125,255));
+		break;
+	case 1:
+		textBox.setFillColor(sf::Color(125,125,125,255));
+		submitButton.setFillColor(sf::Color::Red);
+		quitButton.setFillColor(sf::Color(125,125,125,255));
+		break;
+	case 2:
+		textBox.setFillColor(sf::Color(125,125,125,255));
+		submitButton.setFillColor(sf::Color(125,125,125,255));
+		quitButton.setFillColor(sf::Color::Red);
+	}
+
 
 
 	window.clear();
 	window.draw(textBox);
+	window.draw(header);
+	window.draw(quitButton);
+	window.draw(submitButton);
 	window.draw(input);
+	window.draw(submitText);
+	window.draw(quitText);
 	window.display();
 	}
+}
+
+void subtractionMenu(sf::RenderWindow& window, sf::Font& fnt)
+{
+	bool quit = 0;
+	int selection = 0; // Used for traversing the menu GUI
+	Complx cnum;
+
+	// This regular expression takes an addition expression in terms of 2 complex #'s
+	std::regex regx("^\\s*\\(?\\d+[,]\\d*[i]?\\)?\\s?[-]\\s?\\(?\\d+[,]\\d*[i]?\\)?\\s*$");
+	
+	// Used to detect user input
+	sf::Event addEvent;
+
+	// Used to hold user input
+	std::string str;
+	std::stringstream sstr;
+	sstr.str("");
+	sstr.clear();
+
+	sf::Vector2u screenSize = window.getSize();
+	sf::Text header("Enter an expression in the form: (a, bi) - (c, di)", fnt, 23U);
+	sf::RectangleShape textBox(sf::Vector2f(3*screenSize.x/4, screenSize.y/12));
+	sf::RectangleShape quitButton(sf::Vector2f(3*screenSize.x/10, screenSize.y/12));
+	sf::RectangleShape submitButton(sf::Vector2f(3*screenSize.x/10, screenSize.y/12));
+	sf::Text submitText("SUBMIT", fnt, 20U);
+	sf::Text quitText("BACK", fnt, 20U);
+	sf::Text input(str, fnt, 20U);
+
+
+	while(!quit)
+	{
+		// Most of the following is inside the main loop in case of a window re-size
+		screenSize = window.getSize();
+		textBox.setSize(sf::Vector2f(3*screenSize.x/4, screenSize.y/12));
+		quitButton.setSize(sf::Vector2f(3*screenSize.x/10, screenSize.y/12));
+		submitButton.setSize(sf::Vector2f(3*screenSize.x/10, screenSize.y/12));
+		input.setString(str);
+		sf::FloatRect headerRect(header.getLocalBounds());
+		sf::FloatRect textRect(input.getLocalBounds());
+		sf::FloatRect quitRect(quitText.getLocalBounds());
+		sf::FloatRect submitRect(submitText.getLocalBounds());
+		header.setStyle(sf::Text::Style::Bold);
+		header.setFillColor(sf::Color::White);
+		input.setFillColor(sf::Color::Black);
+		quitText.setFillColor(sf::Color::Black);
+		submitText.setFillColor(sf::Color::Black);
+
+		// Setting the positions of the rectangle objects
+		textBox.setOrigin(sf::Vector2f(textBox.getSize().x/2, textBox.getSize().y/2));
+		textBox.setPosition(sf::Vector2f(screenSize.x/2, screenSize.y/2));
+
+		submitButton.setOrigin(sf::Vector2f(submitButton.getSize().x/2, submitButton.getSize().y/2));
+		submitButton.setPosition(sf::Vector2f(screenSize.x/3, 2*screenSize.y/3));
+
+		quitButton.setOrigin(sf::Vector2f(quitButton.getSize().x/2, quitButton.getSize().y/2));
+		quitButton.setPosition(sf::Vector2f(2*screenSize.x/3, 2*screenSize.y/3));
+
+		// Aforementioned text-centering protocol
+		header.setOrigin(headerRect.left + headerRect.width/2.0f,
+			headerRect.top + headerRect.height/2.0f);
+		
+		input.setOrigin(textRect.left + textRect.width/2.0f,
+			textRect.top + textRect.height/2.0f);
+
+		quitText.setOrigin(quitRect.left + quitRect.width/2.0f,
+			quitRect.top + quitRect.height/2.0f);
+
+		submitText.setOrigin(submitRect.left + submitRect.width/2.0f,
+			submitRect.top + submitRect.height/2.0f);
+		
+		// Setting the position of text objects
+		header.setPosition(screenSize.x/2.0f,screenSize.y/3.0f);
+		input.setPosition(screenSize.x/2,screenSize.y/2);
+		submitText.setPosition(screenSize.x/3, 2*screenSize.y/3);
+		quitText.setPosition(2*screenSize.x/3, 2*screenSize.y/3);
+
+		// This entire loop is for user input by keyboard
+		while (window.pollEvent(addEvent))
+		{
+			if (addEvent.type == sf::Event::KeyPressed)
+			{
+				if (addEvent.key.code == sf::Keyboard::Down || addEvent.key.code == sf::Keyboard::Right)
+				{
+					selection += 1;
+					if (selection > 2)
+						selection = 2;
+				}
+				else if(addEvent.key.code == sf::Keyboard::Up || addEvent.key.code == sf::Keyboard::Left)
+				{
+					selection -= 1;
+					if (selection < 0)
+						selection = 0;
+				}
+				else if(addEvent.key.code == sf::Keyboard::Space || addEvent.key.code == sf::Keyboard::Enter)
+				{
+					switch (selection)
+					{
+					case 0:
+						break;
+					case 1:
+						if(!regex_match(str,regx))
+						{
+							str = "Incorrect form";
+							break;
+						}
+						else if (regex_match(str, regx))
+						{
+							cnum = subComplx(str);
+							sstr << cnum;
+							str = sstr.str();
+							break;
+						}
+					case 2:
+						quit = 1;
+						break;
+					default:
+						break;
+					}
+				}
+			}
+			// This will take any unicode character input by the user and append it (barring a backspace)
+			// to the input std::string as long as if fits the character criteria (ASCII 32-127)
+			if (addEvent.type == sf::Event::TextEntered && selection == 0)
+			{
+				if (addEvent.text.unicode == 8 && !str.empty())
+				{
+					sstr.str("");
+					sstr.clear();
+					str.pop_back();
+				}
+				if (addEvent.text.unicode < 128 && addEvent.text.unicode > 31) 
+				{
+					str += static_cast<char>(addEvent.text.unicode);
+					input.setString(str);
+				}
+			}
+		}
+
+	// Colorizes the text box and buttons as per what is selected
+	switch (selection)
+	{
+	case 0:
+		textBox.setFillColor(sf::Color::White);
+		submitButton.setFillColor(sf::Color(125,125,125,255));
+		quitButton.setFillColor(sf::Color(125,125,125,255));
+		break;
+	case 1:
+		textBox.setFillColor(sf::Color(125,125,125,255));
+		submitButton.setFillColor(sf::Color::Red);
+		quitButton.setFillColor(sf::Color(125,125,125,255));
+		break;
+	case 2:
+		textBox.setFillColor(sf::Color(125,125,125,255));
+		submitButton.setFillColor(sf::Color(125,125,125,255));
+		quitButton.setFillColor(sf::Color::Red);
+	}
+
+
+
+	window.clear();
+	window.draw(textBox);
+	window.draw(header);
+	window.draw(quitButton);
+	window.draw(submitButton);
+	window.draw(input);
+	window.draw(submitText);
+	window.draw(quitText);
+	window.display();
+	}
+}
+
+void multiplicationMenu(sf::RenderWindow& window, sf::Font& fnt)
+{
+	bool quit = 0;
+	int selection = 0; // Used for traversing the menu GUI
+	Complx cnum;
+
+	// This regular expression takes an addition expression in terms of 2 complex #'s
+	std::regex regx("^\\s*\\(?\\d+[,]\\d*[i]?\\)?\\s?[*]\\s?\\(?\\d+[,]\\d*[i]?\\)?\\s*$");
+	
+	// Used to detect user input
+	sf::Event addEvent;
+
+	// Used to hold user input
+	std::string str;
+	std::stringstream sstr;
+	sstr.str("");
+	sstr.clear();
+
+	sf::Vector2u screenSize = window.getSize();
+	sf::Text header("Enter an expression in the form: (a, bi) * (c, di)", fnt, 23U);
+	sf::RectangleShape textBox(sf::Vector2f(3*screenSize.x/4, screenSize.y/12));
+	sf::RectangleShape quitButton(sf::Vector2f(3*screenSize.x/10, screenSize.y/12));
+	sf::RectangleShape submitButton(sf::Vector2f(3*screenSize.x/10, screenSize.y/12));
+	sf::Text submitText("SUBMIT", fnt, 20U);
+	sf::Text quitText("BACK", fnt, 20U);
+	sf::Text input(str, fnt, 20U);
+
+
+	while(!quit)
+	{
+		// Most of the following is inside the main loop in case of a window re-size
+		screenSize = window.getSize();
+		textBox.setSize(sf::Vector2f(3*screenSize.x/4, screenSize.y/12));
+		quitButton.setSize(sf::Vector2f(3*screenSize.x/10, screenSize.y/12));
+		submitButton.setSize(sf::Vector2f(3*screenSize.x/10, screenSize.y/12));
+		input.setString(str);
+		sf::FloatRect headerRect(header.getLocalBounds());
+		sf::FloatRect textRect(input.getLocalBounds());
+		sf::FloatRect quitRect(quitText.getLocalBounds());
+		sf::FloatRect submitRect(submitText.getLocalBounds());
+		header.setStyle(sf::Text::Style::Bold);
+		header.setFillColor(sf::Color::White);
+		input.setFillColor(sf::Color::Black);
+		quitText.setFillColor(sf::Color::Black);
+		submitText.setFillColor(sf::Color::Black);
+
+		// Setting the positions of the rectangle objects
+		textBox.setOrigin(sf::Vector2f(textBox.getSize().x/2, textBox.getSize().y/2));
+		textBox.setPosition(sf::Vector2f(screenSize.x/2, screenSize.y/2));
+
+		submitButton.setOrigin(sf::Vector2f(submitButton.getSize().x/2, submitButton.getSize().y/2));
+		submitButton.setPosition(sf::Vector2f(screenSize.x/3, 2*screenSize.y/3));
+
+		quitButton.setOrigin(sf::Vector2f(quitButton.getSize().x/2, quitButton.getSize().y/2));
+		quitButton.setPosition(sf::Vector2f(2*screenSize.x/3, 2*screenSize.y/3));
+
+		// Aforementioned text-centering protocol
+		header.setOrigin(headerRect.left + headerRect.width/2.0f,
+			headerRect.top + headerRect.height/2.0f);
+		
+		input.setOrigin(textRect.left + textRect.width/2.0f,
+			textRect.top + textRect.height/2.0f);
+
+		quitText.setOrigin(quitRect.left + quitRect.width/2.0f,
+			quitRect.top + quitRect.height/2.0f);
+
+		submitText.setOrigin(submitRect.left + submitRect.width/2.0f,
+			submitRect.top + submitRect.height/2.0f);
+		
+		// Setting the position of text objects
+		header.setPosition(screenSize.x/2.0f,screenSize.y/3.0f);
+		input.setPosition(screenSize.x/2,screenSize.y/2);
+		submitText.setPosition(screenSize.x/3, 2*screenSize.y/3);
+		quitText.setPosition(2*screenSize.x/3, 2*screenSize.y/3);
+
+		// This entire loop is for user input by keyboard
+		while (window.pollEvent(addEvent))
+		{
+			if (addEvent.type == sf::Event::KeyPressed)
+			{
+				if (addEvent.key.code == sf::Keyboard::Down || addEvent.key.code == sf::Keyboard::Right)
+				{
+					selection += 1;
+					if (selection > 2)
+						selection = 2;
+				}
+				else if(addEvent.key.code == sf::Keyboard::Up || addEvent.key.code == sf::Keyboard::Left)
+				{
+					selection -= 1;
+					if (selection < 0)
+						selection = 0;
+				}
+				else if(addEvent.key.code == sf::Keyboard::Space || addEvent.key.code == sf::Keyboard::Enter)
+				{
+					switch (selection)
+					{
+					case 0:
+						break;
+					case 1:
+						if(!regex_match(str,regx))
+						{
+							str = "Incorrect form";
+							break;
+						}
+						else if (regex_match(str, regx))
+						{
+							cnum = mulComplx(str);
+							sstr << cnum;
+							str = sstr.str();
+							break;
+						}
+					case 2:
+						quit = 1;
+						break;
+					default:
+						break;
+					}
+				}
+			}
+			// This will take any unicode character input by the user and append it (barring a backspace)
+			// to the input std::string as long as if fits the character criteria (ASCII 32-127)
+			if (addEvent.type == sf::Event::TextEntered && selection == 0)
+			{
+				if (addEvent.text.unicode == 8 && !str.empty())
+				{
+					sstr.str("");
+					sstr.clear();
+					str.pop_back();
+				}
+				if (addEvent.text.unicode < 128 && addEvent.text.unicode > 31) 
+				{
+					str += static_cast<char>(addEvent.text.unicode);
+					input.setString(str);
+				}
+			}
+		}
+
+	// Colorizes the text box and buttons as per what is selected
+	switch (selection)
+	{
+	case 0:
+		textBox.setFillColor(sf::Color::White);
+		submitButton.setFillColor(sf::Color(125,125,125,255));
+		quitButton.setFillColor(sf::Color(125,125,125,255));
+		break;
+	case 1:
+		textBox.setFillColor(sf::Color(125,125,125,255));
+		submitButton.setFillColor(sf::Color::Red);
+		quitButton.setFillColor(sf::Color(125,125,125,255));
+		break;
+	case 2:
+		textBox.setFillColor(sf::Color(125,125,125,255));
+		submitButton.setFillColor(sf::Color(125,125,125,255));
+		quitButton.setFillColor(sf::Color::Red);
+	}
+
+
+
+	window.clear();
+	window.draw(textBox);
+	window.draw(header);
+	window.draw(quitButton);
+	window.draw(submitButton);
+	window.draw(input);
+	window.draw(submitText);
+	window.draw(quitText);
+	window.display();
+	}
+}
+
+void divisionMenu(sf::RenderWindow& window, sf::Font& fnt)
+{
+	bool quit = 0;
+	int selection = 0; // Used for traversing the menu GUI
+	Complx cnum;
+
+	// This regular expression takes an addition expression in terms of 2 complex #'s
+	std::regex regx("^\\s*\\(?\\d+[,]\\d*[i]?\\)?\\s?[/]\\s?\\(?\\d+[,]\\d*[i]?\\)?\\s*$");
+	
+	// Used to detect user input
+	sf::Event addEvent;
+
+	// Used to hold user input
+	std::string str;
+	std::stringstream sstr;
+	sstr.str("");
+	sstr.clear();
+
+	sf::Vector2u screenSize = window.getSize();
+	sf::Text header("Enter an expression in the form: (a, bi) / (c, di)", fnt, 23U);
+	sf::RectangleShape textBox(sf::Vector2f(3*screenSize.x/4, screenSize.y/12));
+	sf::RectangleShape quitButton(sf::Vector2f(3*screenSize.x/10, screenSize.y/12));
+	sf::RectangleShape submitButton(sf::Vector2f(3*screenSize.x/10, screenSize.y/12));
+	sf::Text submitText("SUBMIT", fnt, 20U);
+	sf::Text quitText("BACK", fnt, 20U);
+	sf::Text input(str, fnt, 20U);
+
+
+	while(!quit)
+	{
+		// Most of the following is inside the main loop in case of a window re-size
+		screenSize = window.getSize();
+		textBox.setSize(sf::Vector2f(3*screenSize.x/4, screenSize.y/12));
+		quitButton.setSize(sf::Vector2f(3*screenSize.x/10, screenSize.y/12));
+		submitButton.setSize(sf::Vector2f(3*screenSize.x/10, screenSize.y/12));
+		input.setString(str);
+		sf::FloatRect headerRect(header.getLocalBounds());
+		sf::FloatRect textRect(input.getLocalBounds());
+		sf::FloatRect quitRect(quitText.getLocalBounds());
+		sf::FloatRect submitRect(submitText.getLocalBounds());
+		header.setStyle(sf::Text::Style::Bold);
+		header.setFillColor(sf::Color::White);
+		input.setFillColor(sf::Color::Black);
+		quitText.setFillColor(sf::Color::Black);
+		submitText.setFillColor(sf::Color::Black);
+
+		// Setting the positions of the rectangle objects
+		textBox.setOrigin(sf::Vector2f(textBox.getSize().x/2, textBox.getSize().y/2));
+		textBox.setPosition(sf::Vector2f(screenSize.x/2, screenSize.y/2));
+
+		submitButton.setOrigin(sf::Vector2f(submitButton.getSize().x/2, submitButton.getSize().y/2));
+		submitButton.setPosition(sf::Vector2f(screenSize.x/3, 2*screenSize.y/3));
+
+		quitButton.setOrigin(sf::Vector2f(quitButton.getSize().x/2, quitButton.getSize().y/2));
+		quitButton.setPosition(sf::Vector2f(2*screenSize.x/3, 2*screenSize.y/3));
+
+		// Aforementioned text-centering protocol
+		header.setOrigin(headerRect.left + headerRect.width/2.0f,
+			headerRect.top + headerRect.height/2.0f);
+		
+		input.setOrigin(textRect.left + textRect.width/2.0f,
+			textRect.top + textRect.height/2.0f);
+
+		quitText.setOrigin(quitRect.left + quitRect.width/2.0f,
+			quitRect.top + quitRect.height/2.0f);
+
+		submitText.setOrigin(submitRect.left + submitRect.width/2.0f,
+			submitRect.top + submitRect.height/2.0f);
+		
+		// Setting the position of text objects
+		header.setPosition(screenSize.x/2.0f,screenSize.y/3.0f);
+		input.setPosition(screenSize.x/2,screenSize.y/2);
+		submitText.setPosition(screenSize.x/3, 2*screenSize.y/3);
+		quitText.setPosition(2*screenSize.x/3, 2*screenSize.y/3);
+
+		// This entire loop is for user input by keyboard
+		while (window.pollEvent(addEvent))
+		{
+			if (addEvent.type == sf::Event::KeyPressed)
+			{
+				if (addEvent.key.code == sf::Keyboard::Down || addEvent.key.code == sf::Keyboard::Right)
+				{
+					selection += 1;
+					if (selection > 2)
+						selection = 2;
+				}
+				else if(addEvent.key.code == sf::Keyboard::Up || addEvent.key.code == sf::Keyboard::Left)
+				{
+					selection -= 1;
+					if (selection < 0)
+						selection = 0;
+				}
+				else if(addEvent.key.code == sf::Keyboard::Space || addEvent.key.code == sf::Keyboard::Enter)
+				{
+					switch (selection)
+					{
+					case 0:
+						break;
+					case 1:
+						if(!regex_match(str,regx))
+						{
+							str = "Incorrect form";
+							break;
+						}
+						else if (regex_match(str, regx))
+						{
+							cnum = divComplx(str);
+							sstr << cnum;
+							str = sstr.str();
+							break;
+						}
+					case 2:
+						quit = 1;
+						break;
+					default:
+						break;
+					}
+				}
+			}
+			// This will take any unicode character input by the user and append it (barring a backspace)
+			// to the input std::string as long as if fits the character criteria (ASCII 32-127)
+			if (addEvent.type == sf::Event::TextEntered && selection == 0)
+			{
+				if (addEvent.text.unicode == 8 && !str.empty())
+				{
+					sstr.str("");
+					sstr.clear();
+					str.pop_back();
+				}
+				if (addEvent.text.unicode < 128 && addEvent.text.unicode > 31) 
+				{
+					str += static_cast<char>(addEvent.text.unicode);
+					input.setString(str);
+				}
+			}
+		}
+
+	// Colorizes the text box and buttons as per what is selected
+	switch (selection)
+	{
+	case 0:
+		textBox.setFillColor(sf::Color::White);
+		submitButton.setFillColor(sf::Color(125,125,125,255));
+		quitButton.setFillColor(sf::Color(125,125,125,255));
+		break;
+	case 1:
+		textBox.setFillColor(sf::Color(125,125,125,255));
+		submitButton.setFillColor(sf::Color::Red);
+		quitButton.setFillColor(sf::Color(125,125,125,255));
+		break;
+	case 2:
+		textBox.setFillColor(sf::Color(125,125,125,255));
+		submitButton.setFillColor(sf::Color(125,125,125,255));
+		quitButton.setFillColor(sf::Color::Red);
+	}
+
+
+
+	window.clear();
+	window.draw(textBox);
+	window.draw(header);
+	window.draw(quitButton);
+	window.draw(submitButton);
+	window.draw(input);
+	window.draw(submitText);
+	window.draw(quitText);
+	window.display();
+	}
+}
+
+Complx addComplx(std::string str)
+{
+	Complx cnum1, cnum2;
+	bool isReal = 1;
+	int temp1, temp2;
+	std::string cstr1, cstr2, realStr, imagStr;
+
+	cstr1 = str.substr(0, str.find('+'));
+	cstr2 = str.substr(str.find('+'));
+
+	for (char c : cstr1)
+	{
+		if(isdigit(c) && isReal)
+			realStr += c;
+		else if(c == ',')
+			isReal = 0;
+		else if(isdigit(c) && !isReal)
+			imagStr += c;
+	}
+
+	// Will change incredibly lazy casting to sstream/boost method (if i remember to)
+	temp1 = std::stoi(realStr);
+	temp2 = std::stoi(imagStr);
+	cnum1.real(static_cast<double>(temp1));
+	cnum1.imag(static_cast<double>(temp2));
+
+	realStr.clear();
+	imagStr.clear();
+	isReal = 1;
+
+	for (char c : cstr2)
+	{
+		if(isdigit(c) && isReal)
+			realStr += c;
+		else if(c == ',')
+			isReal = 0;
+		else if(isdigit(c) && !isReal)
+			imagStr += c;
+	}
+
+	temp1 = std::stoi(realStr);
+	temp2 = std::stoi(imagStr);
+	cnum2.real(static_cast<double>(temp1));
+	cnum2.imag(static_cast<double>(temp2));
+
+	return cnum1 + cnum2;
+}
+
+Complx subComplx(std::string str)
+{
+	Complx cnum1, cnum2;
+	bool isReal = 1;
+	int temp1, temp2;
+	std::string cstr1, cstr2, realStr, imagStr;
+
+	cstr1 = str.substr(0, str.find('-'));
+	cstr2 = str.substr(str.find('-'));
+
+	for (char c : cstr1)
+	{
+		if(isdigit(c) && isReal)
+			realStr += c;
+		else if(c == ',')
+			isReal = 0;
+		else if(isdigit(c) && !isReal)
+			imagStr += c;
+	}
+
+	// Will change incredibly lazy casting to sstream/boost method (if i remember to)
+	temp1 = std::stoi(realStr);
+	temp2 = std::stoi(imagStr);
+	cnum1.real(static_cast<double>(temp1));
+	cnum1.imag(static_cast<double>(temp2));
+
+	realStr.clear();
+	imagStr.clear();
+	isReal = 1;
+
+	for (char c : cstr2)
+	{
+		if(isdigit(c) && isReal)
+			realStr += c;
+		else if(c == ',')
+			isReal = 0;
+		else if(isdigit(c) && !isReal)
+			imagStr += c;
+	}
+
+	temp1 = std::stoi(realStr);
+	temp2 = std::stoi(imagStr);
+	cnum2.real(static_cast<double>(temp1));
+	cnum2.imag(static_cast<double>(temp2));
+
+	return cnum1 - cnum2;
+}
+
+Complx mulComplx(std::string str)
+{
+	Complx cnum1, cnum2;
+	bool isReal = 1;
+	int temp1, temp2;
+	std::string cstr1, cstr2, realStr, imagStr;
+
+	cstr1 = str.substr(0, str.find('*'));
+	cstr2 = str.substr(str.find('*'));
+
+	for (char c : cstr1)
+	{
+		if(isdigit(c) && isReal)
+			realStr += c;
+		else if(c == ',')
+			isReal = 0;
+		else if(isdigit(c) && !isReal)
+			imagStr += c;
+	}
+
+	// Will change incredibly lazy casting to sstream/boost method (if i remember to)
+	temp1 = std::stoi(realStr);
+	temp2 = std::stoi(imagStr);
+	cnum1.real(static_cast<double>(temp1));
+	cnum1.imag(static_cast<double>(temp2));
+
+	realStr.clear();
+	imagStr.clear();
+	isReal = 1;
+
+	for (char c : cstr2)
+	{
+		if(isdigit(c) && isReal)
+			realStr += c;
+		else if(c == ',')
+			isReal = 0;
+		else if(isdigit(c) && !isReal)
+			imagStr += c;
+	}
+
+	temp1 = std::stoi(realStr);
+	temp2 = std::stoi(imagStr);
+	cnum2.real(static_cast<double>(temp1));
+	cnum2.imag(static_cast<double>(temp2));
+
+	return cnum1 * cnum2;
+}
+
+Complx divComplx(std::string str)
+{
+	Complx cnum1, cnum2;
+	bool isReal = 1;
+	int temp1, temp2;
+	std::string cstr1, cstr2, realStr, imagStr;
+
+	cstr1 = str.substr(0, str.find('/'));
+	cstr2 = str.substr(str.find('/'));
+
+	for (char c : cstr1)
+	{
+		if(isdigit(c) && isReal)
+			realStr += c;
+		else if(c == ',')
+			isReal = 0;
+		else if(isdigit(c) && !isReal)
+			imagStr += c;
+	}
+
+	// Will change incredibly lazy casting to sstream/boost method (if i remember to)
+	temp1 = std::stoi(realStr);
+	temp2 = std::stoi(imagStr);
+	cnum1.real(static_cast<double>(temp1));
+	cnum1.imag(static_cast<double>(temp2));
+
+	realStr.clear();
+	imagStr.clear();
+	isReal = 1;
+
+	for (char c : cstr2)
+	{
+		if(isdigit(c) && isReal)
+			realStr += c;
+		else if(c == ',')
+			isReal = 0;
+		else if(isdigit(c) && !isReal)
+			imagStr += c;
+	}
+
+	temp1 = std::stoi(realStr);
+	temp2 = std::stoi(imagStr);
+	cnum2.real(static_cast<double>(temp1));
+	cnum2.imag(static_cast<double>(temp2));
+
+	return cnum1 / cnum2;
 }

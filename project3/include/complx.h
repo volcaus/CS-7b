@@ -15,46 +15,46 @@ public:
 
 	friend std::istream& operator>>(std::istream& is, Complx& cNum);
 
-	Complx operator+(const Complx& lhs)
+	Complx operator+(const Complx& rhs)
 	{
 		Complx n;
 
-		n.realNum = this->realNum + lhs.realNum;
-		n.imagNum = this->imagNum + lhs.imagNum;
+		n.realNum = this->realNum + rhs.realNum;
+		n.imagNum = this->imagNum + rhs.imagNum;
 
 		return n;
 	}
 
-	Complx operator-(const Complx& lhs)
+	Complx operator-(const Complx& rhs)
 	{
 		Complx n;
 
-		n.realNum = lhs.realNum - this->realNum;
-		n.imagNum = lhs.imagNum - this->imagNum;
+		n.realNum = this->realNum - rhs.realNum;
+		n.imagNum = this->imagNum - rhs.imagNum;
 
 		return n;
 	}
 
-	Complx operator*(const Complx& lhs)
+	Complx operator*(const Complx& rhs)
 	{
 		Complx n;
 
-		n.realNum = (this -> realNum * lhs.realNum) - (this -> imagNum * lhs.imagNum);
-		n.imagNum = (lhs.realNum * this -> imagNum) + (lhs.imagNum * this -> realNum);
+		n.realNum = (this -> realNum * rhs.realNum) - (this -> imagNum * rhs.imagNum);
+		n.imagNum = (rhs.realNum * this -> imagNum) + (rhs.imagNum * this -> realNum);
 
 		return n;
 	}
 
-	Complx operator/(const Complx& lhs)
+	Complx operator/(const Complx& rhs)
 	{
-		Complx n, temp(this -> realNum, this -> imagNum);
+		Complx n, temp(rhs.realNum, rhs.imagNum);
 		double d;
 
-		n = temp.conj() * lhs;
-		d = (this -> realNum * this->realNum) + (this -> imagNum * this -> imagNum);
+		temp = temp.conj();
+		d = (rhs.realNum * rhs.realNum) + (rhs.imagNum * rhs.imagNum);
 
-		n.realNum = n.realNum / d;
-		n.imagNum = n.imagNum /d;
+		n.realNum = ((this->realNum * temp.realNum) + (this->imagNum * temp.imagNum)*-1)/d;
+		n.imagNum = ((this->imagNum*temp.realNum)+(this->realNum*temp.imagNum))/d;
 
 		return n;
 	}
