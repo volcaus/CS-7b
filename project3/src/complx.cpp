@@ -44,7 +44,7 @@ double Complx::abs()
 
 std::ostream& operator<<(std::ostream& os, const Complx& cNum)
 {
-        os << cNum.realNum << ", " << cNum.imagNum << 'i';
+        os << cNum.realNum << "+" << cNum.imagNum << 'i';
         return os;
 }
 

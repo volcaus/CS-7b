@@ -6,7 +6,6 @@
 #include <regex>
 #include "complx.h"
 
-void underConstruction(sf::RenderWindow&); // placeholder function for unfinished menu selections
 void textAnimation(sf::Text&, bool&, int&); // self-explanatory
 
 int mainMenu(sf::RenderWindow&, sf::Font&); // looped main menu that calls the following functions
@@ -14,16 +13,17 @@ void additionMenu(sf::RenderWindow&, sf::Font&); // Allows playing with the Comp
 void subtractionMenu(sf::RenderWindow&, sf::Font&); // Allows playing with the Complx class
 void multiplicationMenu(sf::RenderWindow&, sf::Font&); // Allows playing with the Complx class
 void divisionMenu(sf::RenderWindow&, sf::Font&); // Allows playing with the Complx class
+void basins(sf::RenderWindow&, sf::Font); // displays the basins of attraction
 
-Complx addComplx(std::string);
-Complx subComplx(std::string);
-Complx mulComplx(std::string);
-Complx divComplx(std::string);
+Complx addComplx(std::string); // adds 2 Complx #'s
+Complx subComplx(std::string); // subtracts 2 Complx #'s
+Complx mulComplx(std::string); // multiplies 2 Complx #'s
+Complx divComplx(std::string); // divides 2 Complx #'s
+int babylonianAlgorithm(Complx);
 
 int main()
 {
 	sf::RenderWindow window(sf::VideoMode(600, 600), "SFML APP", sf::Style::Close || sf::Style::Resize);
-	window.setFramerateLimit(60);
 
 	sf::Vector2u screenSize = window.getSize();
 	
@@ -43,6 +43,7 @@ int main()
 
 	while (window.isOpen())
 	{
+		window.setFramerateLimit(60);
 		sf::Event event;
 		while (window.pollEvent(event))
 		{
@@ -67,6 +68,9 @@ int main()
 						divisionMenu(window, fnt);
 						break;
 					case 4:
+						basins(window, fnt);
+						break;
+					case 5:
 						window.close();
 						break;
 					default:
@@ -112,7 +116,7 @@ int mainMenu(sf::RenderWindow& window, sf::Font& fnt)
 
 	while (!quit)
 	{
-		std::vector<sf::Text> menu (5, sf::Text ("Option", fnt, 30)); 
+		std::vector<sf::Text> menu (6, sf::Text ("Option", fnt, 30)); 
 		// Vector of sf::Text objects for the main menu
 		
 		sf::Vector2u screenSize = window.getSize(); // getting size of window again in case of a resize
@@ -130,13 +134,15 @@ int mainMenu(sf::RenderWindow& window, sf::Font& fnt)
 	menu[1].setString("Subtraction");
 	menu[2].setString("Multiplication");
 	menu[3].setString("Division");
-	menu[4].setString("Quit");
+	menu[4].setString("Basins");
+	menu[5].setString("Quit");
 
 	sf::FloatRect textRect0 = menu[0].getLocalBounds(); // Now that the Text objects have the desired
 	sf::FloatRect textRect1 = menu[1].getLocalBounds(); // strings we can construct the rects as described above
 	sf::FloatRect textRect2 = menu[2].getLocalBounds(); // because they now have their final size/bounds
 	sf::FloatRect textRect3 = menu[3].getLocalBounds();
 	sf::FloatRect textRect4 = menu[4].getLocalBounds();
+	sf::FloatRect textRect5 = menu[5].getLocalBounds();
 
 	menu[0].setOrigin(textRect0.left + textRect0.width/2.0f, textRect0.top + textRect0.height/2.0f);
 	menu[0].setPosition(sf::Vector2f(screenSize.x/4, menuRect.top + menuRect.top/6));
@@ -147,7 +153,9 @@ int mainMenu(sf::RenderWindow& window, sf::Font& fnt)
 	menu[3].setOrigin(textRect3.left + textRect3.width/2.0f, textRect3.top + textRect3.height/2.0f);
 	menu[3].setPosition(sf::Vector2f(3*screenSize.x/4, menuRect.top + menuRect.top/2));
 	menu[4].setOrigin(textRect4.left + textRect4.width/2.0f, textRect4.top + textRect4.height/2.0f);
-	menu[4].setPosition(sf::Vector2f(screenSize.x/2, menuRect.top + (5*menuRect.top/6)));
+	menu[4].setPosition(sf::Vector2f(screenSize.x/4, menuRect.top + (5*menuRect.top/6)));
+	menu[5].setOrigin(textRect5.left + textRect5.width/2.0f, textRect5.top + textRect5.height/2.0f);
+	menu[5].setPosition(sf::Vector2f(3*screenSize.x/4, menuRect.top + (5*menuRect.top/6)));
 
 	/* 
 		The following loop is used to check for user input.
@@ -166,8 +174,8 @@ int mainMenu(sf::RenderWindow& window, sf::Font& fnt)
 			if (menuEvent.key.code == sf::Keyboard::Right)
 			{
 				selection++;
-				if (selection >= 4) // max selection is currently 4
-					selection = 4;
+				if (selection >= 5) // max selection is currently 4
+					selection = 5;
 			}
 			if (menuEvent.key.code  == sf::Keyboard::Left)
 			{
@@ -178,8 +186,8 @@ int mainMenu(sf::RenderWindow& window, sf::Font& fnt)
 			if (menuEvent.key.code == sf::Keyboard::Down)
 			{
 				selection += 2;
-				if (selection >= 4) // max selection is currently 4
-					selection = 4;
+				if (selection >= 5) // max selection is currently 4
+					selection = 5;
 			}
 			if (menuEvent.key.code  == sf::Keyboard::Up)
 			{
@@ -207,11 +215,6 @@ int mainMenu(sf::RenderWindow& window, sf::Font& fnt)
 	return selection;
 }
 
-void underConstruction(sf::RenderWindow& window)
-{
-
-}
-
 void additionMenu(sf::RenderWindow& window, sf::Font& fnt)
 {
 	bool quit = 0;
@@ -219,7 +222,7 @@ void additionMenu(sf::RenderWindow& window, sf::Font& fnt)
 	Complx cnum;
 
 	// This regular expression takes an addition expression in terms of 2 complex #'s
-	std::regex regx("^\\s*\\(?\\d+[,]\\d*[i]?\\)?\\s?[+]\\s?\\(?\\d+[,]\\d*[i]?\\)?\\s*$");
+	std::regex regx("^\\s*\\(?\\d+[+]\\d*[i]?\\)?\\s?[+]\\s?\\(?\\d+[+]\\d*[i]?\\)?\\s*$");
 	
 	// Used to detect user input
 	sf::Event addEvent;
@@ -231,7 +234,7 @@ void additionMenu(sf::RenderWindow& window, sf::Font& fnt)
 	sstr.clear();
 
 	sf::Vector2u screenSize = window.getSize();
-	sf::Text header("Enter an expression in the form: (a, bi) + (c, di)", fnt, 23U);
+	sf::Text header("Enter an expression in the form: (a+bi) + (c+di)", fnt, 23U);
 	sf::RectangleShape textBox(sf::Vector2f(3*screenSize.x/4, screenSize.y/12));
 	sf::RectangleShape quitButton(sf::Vector2f(3*screenSize.x/10, screenSize.y/12));
 	sf::RectangleShape submitButton(sf::Vector2f(3*screenSize.x/10, screenSize.y/12));
@@ -389,7 +392,7 @@ void subtractionMenu(sf::RenderWindow& window, sf::Font& fnt)
 	Complx cnum;
 
 	// This regular expression takes an addition expression in terms of 2 complex #'s
-	std::regex regx("^\\s*\\(?\\d+[,]\\d*[i]?\\)?\\s?[-]\\s?\\(?\\d+[,]\\d*[i]?\\)?\\s*$");
+	std::regex regx("^\\s*\\(?\\d+[+]\\d*[i]?\\)?\\s?[-]\\s?\\(?\\d+[+]\\d*[i]?\\)?\\s*$");
 	
 	// Used to detect user input
 	sf::Event addEvent;
@@ -401,7 +404,7 @@ void subtractionMenu(sf::RenderWindow& window, sf::Font& fnt)
 	sstr.clear();
 
 	sf::Vector2u screenSize = window.getSize();
-	sf::Text header("Enter an expression in the form: (a, bi) - (c, di)", fnt, 23U);
+	sf::Text header("Enter an expression in the form: (a+bi) - (c+di)", fnt, 23U);
 	sf::RectangleShape textBox(sf::Vector2f(3*screenSize.x/4, screenSize.y/12));
 	sf::RectangleShape quitButton(sf::Vector2f(3*screenSize.x/10, screenSize.y/12));
 	sf::RectangleShape submitButton(sf::Vector2f(3*screenSize.x/10, screenSize.y/12));
@@ -559,7 +562,7 @@ void multiplicationMenu(sf::RenderWindow& window, sf::Font& fnt)
 	Complx cnum;
 
 	// This regular expression takes an addition expression in terms of 2 complex #'s
-	std::regex regx("^\\s*\\(?\\d+[,]\\d*[i]?\\)?\\s?[*]\\s?\\(?\\d+[,]\\d*[i]?\\)?\\s*$");
+	std::regex regx("^\\s*\\(?\\d+[+]\\d*[i]?\\)?\\s?[*]\\s?\\(?\\d+[+]\\d*[i]?\\)?\\s*$");
 	
 	// Used to detect user input
 	sf::Event addEvent;
@@ -571,7 +574,7 @@ void multiplicationMenu(sf::RenderWindow& window, sf::Font& fnt)
 	sstr.clear();
 
 	sf::Vector2u screenSize = window.getSize();
-	sf::Text header("Enter an expression in the form: (a, bi) * (c, di)", fnt, 23U);
+	sf::Text header("Enter an expression in the form: (a+bi) * (c+di)", fnt, 23U);
 	sf::RectangleShape textBox(sf::Vector2f(3*screenSize.x/4, screenSize.y/12));
 	sf::RectangleShape quitButton(sf::Vector2f(3*screenSize.x/10, screenSize.y/12));
 	sf::RectangleShape submitButton(sf::Vector2f(3*screenSize.x/10, screenSize.y/12));
@@ -729,7 +732,7 @@ void divisionMenu(sf::RenderWindow& window, sf::Font& fnt)
 	Complx cnum;
 
 	// This regular expression takes an addition expression in terms of 2 complex #'s
-	std::regex regx("^\\s*\\(?\\d+[,]\\d*[i]?\\)?\\s?[/]\\s?\\(?\\d+[,]\\d*[i]?\\)?\\s*$");
+	std::regex regx("^\\s*\\(?\\d+[+]\\d*[i]?\\)?\\s?[/]\\s?\\(?\\d+[+]\\d*[i]?\\)?\\s*$");
 	
 	// Used to detect user input
 	sf::Event addEvent;
@@ -741,7 +744,7 @@ void divisionMenu(sf::RenderWindow& window, sf::Font& fnt)
 	sstr.clear();
 
 	sf::Vector2u screenSize = window.getSize();
-	sf::Text header("Enter an expression in the form: (a, bi) / (c, di)", fnt, 23U);
+	sf::Text header("Enter an expression in the form: (a+bi) / (c+di)", fnt, 23U);
 	sf::RectangleShape textBox(sf::Vector2f(3*screenSize.x/4, screenSize.y/12));
 	sf::RectangleShape quitButton(sf::Vector2f(3*screenSize.x/10, screenSize.y/12));
 	sf::RectangleShape submitButton(sf::Vector2f(3*screenSize.x/10, screenSize.y/12));
@@ -899,14 +902,16 @@ Complx addComplx(std::string str)
 	int temp1, temp2;
 	std::string cstr1, cstr2, realStr, imagStr;
 
-	cstr1 = str.substr(0, str.find('+'));
-	cstr2 = str.substr(str.find('+'));
+	size_t found = str.find('+');
 
-	for (char c : cstr1)
+	cstr1 = str.substr(0, str.find('+', found+1)); // Splits the string into 2 seperate complex #'s
+	cstr2 = str.substr(str.find('+', found+1)+1);
+
+	for (char c : cstr1) // Breaks first complex # into real and imaginary portions
 	{
 		if(isdigit(c) && isReal)
 			realStr += c;
-		else if(c == ',')
+		else if(c == '+')
 			isReal = 0;
 		else if(isdigit(c) && !isReal)
 			imagStr += c;
@@ -926,7 +931,7 @@ Complx addComplx(std::string str)
 	{
 		if(isdigit(c) && isReal)
 			realStr += c;
-		else if(c == ',')
+		else if(c == '+')
 			isReal = 0;
 		else if(isdigit(c) && !isReal)
 			imagStr += c;
@@ -940,7 +945,7 @@ Complx addComplx(std::string str)
 	return cnum1 + cnum2;
 }
 
-Complx subComplx(std::string str)
+Complx subComplx(std::string str) // Look to addComplx() for documentation (line 898)
 {
 	Complx cnum1, cnum2;
 	bool isReal = 1;
@@ -954,7 +959,7 @@ Complx subComplx(std::string str)
 	{
 		if(isdigit(c) && isReal)
 			realStr += c;
-		else if(c == ',')
+		else if(c == '+')
 			isReal = 0;
 		else if(isdigit(c) && !isReal)
 			imagStr += c;
@@ -974,7 +979,7 @@ Complx subComplx(std::string str)
 	{
 		if(isdigit(c) && isReal)
 			realStr += c;
-		else if(c == ',')
+		else if(c == '+')
 			isReal = 0;
 		else if(isdigit(c) && !isReal)
 			imagStr += c;
@@ -988,7 +993,7 @@ Complx subComplx(std::string str)
 	return cnum1 - cnum2;
 }
 
-Complx mulComplx(std::string str)
+Complx mulComplx(std::string str) // Look to addComplx() for documentation (line 898)
 {
 	Complx cnum1, cnum2;
 	bool isReal = 1;
@@ -1002,7 +1007,7 @@ Complx mulComplx(std::string str)
 	{
 		if(isdigit(c) && isReal)
 			realStr += c;
-		else if(c == ',')
+		else if(c == '+')
 			isReal = 0;
 		else if(isdigit(c) && !isReal)
 			imagStr += c;
@@ -1022,7 +1027,7 @@ Complx mulComplx(std::string str)
 	{
 		if(isdigit(c) && isReal)
 			realStr += c;
-		else if(c == ',')
+		else if(c == '+')
 			isReal = 0;
 		else if(isdigit(c) && !isReal)
 			imagStr += c;
@@ -1036,7 +1041,7 @@ Complx mulComplx(std::string str)
 	return cnum1 * cnum2;
 }
 
-Complx divComplx(std::string str)
+Complx divComplx(std::string str) // Look to addComplx() for documentation (line 898)
 {
 	Complx cnum1, cnum2;
 	bool isReal = 1;
@@ -1050,13 +1055,13 @@ Complx divComplx(std::string str)
 	{
 		if(isdigit(c) && isReal)
 			realStr += c;
-		else if(c == ',')
+		else if(c == '+')
 			isReal = 0;
 		else if(isdigit(c) && !isReal)
 			imagStr += c;
 	}
 
-	// Will change incredibly lazy casting to sstream/boost method (if i remember to)
+	// Will change incredibly lazy casting to sstream method (if i remember to)
 	temp1 = std::stoi(realStr);
 	temp2 = std::stoi(imagStr);
 	cnum1.real(static_cast<double>(temp1));
@@ -1070,7 +1075,7 @@ Complx divComplx(std::string str)
 	{
 		if(isdigit(c) && isReal)
 			realStr += c;
-		else if(c == ',')
+		else if(c == '+')
 			isReal = 0;
 		else if(isdigit(c) && !isReal)
 			imagStr += c;
@@ -1082,4 +1087,96 @@ Complx divComplx(std::string str)
 	cnum2.imag(static_cast<double>(temp2));
 
 	return cnum1 / cnum2;
+}
+
+void basins(sf::RenderWindow& window, sf::Font fnt)
+{
+	window.setFramerateLimit(0);
+	window.clear();
+	sf::Vector2f windowSize = sf::Vector2f(window.getSize().x, window.getSize().y);
+	bool quit = 0;
+	size_t widthPen = 0, heightPen = 0; // Literally the location in window to draw (relative to top left)
+	int gradient; // Will be used for when the calculation function returns a non-0, non-100 value
+	Complx input(-3, 2); // The re,im value to begin drawing from
+	
+	// The following values will be able to be user-defined if given time to implement that
+	double scale = 1.0, // pixel density of the below rectangle shape for drawing the basins
+		minReal = -3.0, // minimum real values to display on 'graph'
+		minImag = -2.0, // likewise for imaginary values
+		maxReal = 1.0,
+		maxImag = 2.0;
+
+	sf::Event basinEvent;
+	sf::Text quitText("Press 'q' to quit", fnt, 12u);
+
+	sf::RectangleShape ink; // rectangle of size scaleXscale to be drawn at pen location
+	ink.setSize(sf::Vector2f(scale,scale));
+	
+
+	while(!quit)
+	{
+		windowSize = sf::Vector2f(window.getSize().x, window.getSize().y);
+
+		while (window.pollEvent(basinEvent)) // checks for 'Q' keypress indicating desire to quit
+		{
+			if (basinEvent.type == sf::Event::KeyPressed)
+				if (basinEvent.key.code == sf::Keyboard::Q)
+					quit = 1;
+		}
+
+		if (widthPen <= windowSize.x && heightPen <= windowSize.y)
+		{
+			if(widthPen >= windowSize.x)
+			{
+				input.real(minReal);
+				input.imag(input.imag() - 4*scale/windowSize.y);
+				widthPen = 0;
+				heightPen += scale;
+				if (heightPen >= windowSize.y)
+					continue;
+			}
+
+			ink.setPosition(widthPen, heightPen);
+			switch (gradient = babylonianAlgorithm(input))
+			{
+			case 0:
+				ink.setFillColor(sf::Color::Red);
+				break;
+			case 100:
+				ink.setFillColor(sf::Color::Black);
+				break;
+			default:
+				ink.setFillColor(sf::Color(75+gradient,75+gradient,75+gradient));
+				break;
+			}
+
+			input.real(input.real() + 4*scale/windowSize.x);
+			widthPen += scale;
+		}
+
+		window.draw(ink);
+		window.draw(quitText);
+		window.display();
+	}
+}
+
+int babylonianAlgorithm(Complx c)
+{
+	Complx offset, temp(c.real(), c.imag());
+	int behaviour = 0;
+
+	while((offset - temp).abs() > 0.001)
+	{
+		++behaviour;
+		offset = temp;
+		temp = temp * temp + c;
+
+		if ((offset-temp).abs() > 100)
+			return 0;
+		
+		if (behaviour > 100)
+			return 100;
+	}
+
+	return behaviour;
 }

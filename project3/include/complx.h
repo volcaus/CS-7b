@@ -10,9 +10,7 @@ public:
 	void imag(double); // sets new imaginary component
 	Complx conj(); // returns the conjugate of the Complx object that calls it
 	double abs(); // returns modulus (distance from origin) of the complex number
-
 	friend std::ostream& operator<<(std::ostream& os, const Complx& cNum);
-
 	friend std::istream& operator>>(std::istream& is, Complx& cNum);
 
 	Complx operator+(const Complx& rhs)
