@@ -34,8 +34,7 @@ int main()
 	sf::Vector2u screenSize = window.getSize();
 
 	sf::Font fnt;
-	//fnt.loadFromFile("fnt/Sansation-Bold.ttf");
-	fnt.loadFromFile("fnt/sansation.ttf");
+	fnt.loadFromFile("fnt/Sansation-Bold.ttf");
 
 	bool fade = 1; // used for fading animation of text
 	int alpha = 250; // as above so below
@@ -1163,7 +1162,7 @@ void basins(sf::RenderWindow& window, sf::Font fnt, sf::Vector2f topLeft, sf::Ve
 			{
 				if (basinEvent.mouseButton.button == sf::Mouse::Left)
 				{
-					mouseLocation2 = sf::Vector2f(sf::Mouse::getPosition(window);
+					mouseLocation2 = sf::Vector2f(sf::Mouse::getPosition(window));
 					mouseLocation1.x = minReal + (graphSize * scale / windowSize.x) * mouseLocation1.x/scale; // Adjusts points to graphSize
 					mouseLocation1.y = maxImag - (graphSize * scale / windowSize.y) * mouseLocation1.y/scale;
 					mouseLocation2.x = minReal + (graphSize * scale / windowSize.x) * mouseLocation2.x/scale;
