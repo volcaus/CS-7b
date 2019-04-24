@@ -17,7 +17,7 @@ Project 2: Creating a 3x3 grid of 6-letter words using 2-letter chemical symbols
 
 Project 3: SFML complex numbers excercises
 
-	Completion: ~75%
+	Completion: ~99%
 	
-	Notes: Only the menu visuals and functionality of the arithmatic operations for the Complx class
-	are done. Implementation of the basins and visualizing them has not been started.
+	Notes: Everything necessary has been completed, and then some. Would like
+	to clean some small QOL things up if I have time.
