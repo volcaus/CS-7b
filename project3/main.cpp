@@ -18,8 +18,8 @@ void subtractionMenu(sf::RenderWindow&, sf::Font&); // Allows playing with the C
 void multiplicationMenu(sf::RenderWindow&, sf::Font&); // Allows playing with the Complx class
 void divisionMenu(sf::RenderWindow&, sf::Font&); // Allows playing with the Complx class
 
-void basins(sf::RenderWindow&, sf::Font, sf::Vector2f topLeft = sf::Vector2f(-3.0,2.0),
-	sf::Vector2f botRight = sf::Vector2f(1.0,-2.0)); // displays the basins of attraction
+void basins(sf::RenderWindow&, sf::Font, sf::Vector2f topLeft = sf::Vector2f(-3.0, 2.0),
+	sf::Vector2f botRight = sf::Vector2f(1.0, -2.0)); // displays the basins of attraction
 
 Complx addComplx(std::string); // adds 2 Complx #'s
 Complx subComplx(std::string); // subtracts 2 Complx #'s
@@ -34,7 +34,8 @@ int main()
 	sf::Vector2u screenSize = window.getSize();
 
 	sf::Font fnt;
-	fnt.loadFromFile("fnt/Sansation-Bold.ttf");
+	//fnt.loadFromFile("fnt/Sansation-Bold.ttf");
+	fnt.loadFromFile("fnt/sansation.ttf");
 
 	bool fade = 1; // used for fading animation of text
 	int alpha = 250; // as above so below
@@ -1103,31 +1104,46 @@ void basins(sf::RenderWindow& window, sf::Font fnt, sf::Vector2f topLeft, sf::Ve
 	canvas.create(window.getSize().x, window.getSize().y); // Sizing the RenderTexture
 	window.setFramerateLimit(0);
 	sf::Vector2f windowSize = sf::Vector2f(window.getSize().x, window.getSize().y);
-	sf::Vector2f mouseLocation1,mouseLocation2;
+	sf::Vector2f mouseLocation1, mouseLocation2;
 	bool quit = 0;
 	size_t widthPen = 0, heightPen = 0; // Literally the location in window to draw (relative to top left)
 	int gradient; // Will be used for when the calculation function returns a non-0, non-100 value
 
-						 // The following values will be able to be user-defined if given time to implement that
-	double scale = 3.0, // pixel density of the below rectangle shape for drawing the basins
+				  // The following values will be able to be user-defined if given time to implement that
+	double scale = 10.0, // pixel density of the below rectangle shape for drawing the basins
 		minReal = topLeft.x, // values to display on 'graph'
 		maxImag = topLeft.y,
 		maxReal = botRight.x,
-		minImag = botRight.y, 
+		minImag = botRight.y,
 		graphSize = abs(minReal - maxReal); // Used to scale the drawing of rectangles relative to
-																		// window size while keeping a graph spanning the given units
+											// window size while keeping a graph spanning the given units
 
 	Complx input(minReal, maxImag); // The real,imag value to begin drawing from (on complex plane)
 	sf::Event basinEvent;
-	sf::Text quitText("Press 'q' to quit", fnt, 12u);
+	sf::Text quitText("Press 'q' to quit", fnt, 15u);
+	
+	if (input.real() != -3.0 && input.imag() != 2.0)
+		quitText.setString("Press 'q' to zoom out");
+
+	sf::Text zoomText("Left click and drag to zoom", fnt, 15U);
+	zoomText.setPosition(sf::Vector2f(0, quitText.getLocalBounds().height));
 
 	sf::RectangleShape ink; // rectangle of size scaleXscale to be drawn at pen location
+	sf::RectangleShape zoomRect;
+	zoomRect.setFillColor(sf::Color::Transparent);
+	zoomRect.setOutlineColor(sf::Color::Transparent);
+	zoomRect.setOutlineThickness(1.0);
 	ink.setSize(sf::Vector2f(scale, scale));
 
 
 	while (!quit)
 	{
 		windowSize = sf::Vector2f(window.getSize().x, window.getSize().y);
+		mouseLocation2 = sf::Vector2f(sf::Mouse::getPosition(window));
+		zoomRect.setSize(sf::Vector2f(-(mouseLocation1.x - mouseLocation2.x),
+										-(mouseLocation1.y - mouseLocation2.y)));
+		
+		zoomRect.setPosition(mouseLocation1);
 
 		while (window.pollEvent(basinEvent)) // checks for 'Q' keypress indicating desire to quit
 		{
@@ -1135,30 +1151,34 @@ void basins(sf::RenderWindow& window, sf::Font fnt, sf::Vector2f topLeft, sf::Ve
 				if (basinEvent.key.code == sf::Keyboard::Q)
 					quit = 1;
 
-			if(basinEvent.type == sf::Event::MouseButtonPressed)
+			if (basinEvent.type == sf::Event::MouseButtonPressed)
 			{
-				if(basinEvent.mouseButton.button == sf::Mouse::Left)
+				if (basinEvent.mouseButton.button == sf::Mouse::Left)
 				{
 					mouseLocation1 = sf::Vector2f(sf::Mouse::getPosition(window)); // Gets mouse position relative to window
-					mouseLocation1.x = (graphSize * scale / windowSize.x) * mouseLocation1.x; // Adjusts it to graphSize
-					mouseLocation1.y = (graphSize * scale / windowSize.y) * mouseLocation1.y; 
+					zoomRect.setOutlineColor(sf::Color::Magenta);
 				}
 			}
-			if(basinEvent.type == sf::Event::MouseButtonReleased)
+			if (basinEvent.type == sf::Event::MouseButtonReleased)
 			{
-				if(basinEvent.mouseButton.button == sf::Mouse::Left)
+				if (basinEvent.mouseButton.button == sf::Mouse::Left)
 				{
-					mouseLocation2 = sf::Vector2f(sf::Mouse::getPosition(window));
-					mouseLocation2.x = (graphSize * scale / windowSize.x) * mouseLocation2.x;
-					mouseLocation2.y = (graphSize * scale / windowSize.y) * mouseLocation2.y; 
-					if (mouseLocation1.x < mouseLocation2.x && mouseLocation1.y > mouseLocation2.y)
-						basins(window, fnt, sf::Vector2f(mouseLocation1), sf::Vector2f(mouseLocation2));
+					mouseLocation2 = sf::Vector2f(sf::Mouse::getPosition(window);
+					mouseLocation1.x = minReal + (graphSize * scale / windowSize.x) * mouseLocation1.x/scale; // Adjusts points to graphSize
+					mouseLocation1.y = maxImag - (graphSize * scale / windowSize.y) * mouseLocation1.y/scale;
+					mouseLocation2.x = minReal + (graphSize * scale / windowSize.x) * mouseLocation2.x/scale;
+					mouseLocation2.y = maxImag - (graphSize * scale / windowSize.y) * mouseLocation2.y/scale;
+					
+					if (mouseLocation1.x < mouseLocation2.x && mouseLocation1.y > mouseLocation2.y)	// Depending on orientation of the drawn rect,
+						basins(window, fnt, sf::Vector2f(mouseLocation1), sf::Vector2f(mouseLocation2));	// we call the function with the new coordinates
 					else
-						basins(window,fnt,sf::Vector2f(mouseLocation2), sf::Vector2f(mouseLocation1));
+						basins(window, fnt, sf::Vector2f(mouseLocation2), sf::Vector2f(mouseLocation1));
+
+					zoomRect.setOutlineColor(sf::Color::Transparent);
 				}
 			}
 		}
-				
+
 		if (widthPen <= windowSize.x && heightPen <= windowSize.y)
 		{
 			if (widthPen >= windowSize.x) // Checks for end of working line
@@ -1176,7 +1196,7 @@ void basins(sf::RenderWindow& window, sf::Font fnt, sf::Vector2f topLeft, sf::Ve
 			switch (gradient = babylonianAlgorithm(input))
 			{
 			case 0:
-				ink.setFillColor(sf::Color::Blue);
+				ink.setFillColor(sf::Color::Red);
 				break;
 			case 100:
 				ink.setFillColor(sf::Color::Black);
@@ -1187,11 +1207,11 @@ void basins(sf::RenderWindow& window, sf::Font fnt, sf::Vector2f topLeft, sf::Ve
 			}
 
 			// Increases the real value of the input by a value relative to screensize
-			input.real(input.real() + graphSize * scale / windowSize.x); 
+			input.real(input.real() + graphSize * scale / windowSize.x);
 			widthPen += scale;
-		} 
+			std::cout << "Calculated " << input << std::endl;
+		}
 
-		std::cout << "Calculated " << input << std::endl;
 
 		canvas.draw(ink); // Draws the rectangle to an offscreen texture
 		canvas.display(); // Displays said rectangle (off-screen)
@@ -1200,6 +1220,8 @@ void basins(sf::RenderWindow& window, sf::Font fnt, sf::Vector2f topLeft, sf::Ve
 		sf::Sprite canvasSprite(canvas.getTexture()); // Creates a sprite from canvas texture
 		window.draw(canvasSprite);
 		window.draw(quitText);
+		window.draw(zoomText);
+		window.draw(zoomRect);
 		window.display();
 	}
 }
@@ -1209,16 +1231,16 @@ int babylonianAlgorithm(Complx c)
 	Complx offset, temp(c.real(), c.imag());
 	int behaviour = 0;
 
-	while ((offset - temp).abs() > 0.001)
+	while ((offset - temp).abs() > 0.000001)
 	{
 		++behaviour;
 		offset = temp;
 		temp = temp * temp + c;
 
-		if ((offset - temp).abs() > 100)
+		if ((offset - temp).abs() > 1000)
 			return 0;
 
-		if (behaviour > 100)
+		if (behaviour > 1000)
 			return 100;
 	}
 
