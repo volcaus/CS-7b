@@ -17,7 +17,9 @@ void additionMenu(sf::RenderWindow&, sf::Font&); // Allows playing with the Comp
 void subtractionMenu(sf::RenderWindow&, sf::Font&); // Allows playing with the Complx class
 void multiplicationMenu(sf::RenderWindow&, sf::Font&); // Allows playing with the Complx class
 void divisionMenu(sf::RenderWindow&, sf::Font&); // Allows playing with the Complx class
-void basins(sf::RenderWindow&, sf::Font); // displays the basins of attraction
+
+void basins(sf::RenderWindow&, sf::Font, sf::Vector2f topLeft = sf::Vector2f(-3.0,2.0),
+	sf::Vector2f botRight = sf::Vector2f(1.0,-2.0)); // displays the basins of attraction
 
 Complx addComplx(std::string); // adds 2 Complx #'s
 Complx subComplx(std::string); // subtracts 2 Complx #'s
@@ -32,7 +34,7 @@ int main()
 	sf::Vector2u screenSize = window.getSize();
 
 	sf::Font fnt;
-	fnt.loadFromFile("fnt/sansation.ttf");
+	fnt.loadFromFile("fnt/Sansation-Bold.ttf");
 
 	bool fade = 1; // used for fading animation of text
 	int alpha = 250; // as above so below
@@ -1095,24 +1097,27 @@ Complx divComplx(std::string str) // Look to addComplx() for documentation (line
 	return cnum1 / cnum2;
 }
 
-void basins(sf::RenderWindow& window, sf::Font fnt)
+void basins(sf::RenderWindow& window, sf::Font fnt, sf::Vector2f topLeft, sf::Vector2f botRight)
 {
 	sf::RenderTexture canvas; // Draw to this first so we can clear the RenderWindow properly
 	canvas.create(window.getSize().x, window.getSize().y); // Sizing the RenderTexture
 	window.setFramerateLimit(0);
 	sf::Vector2f windowSize = sf::Vector2f(window.getSize().x, window.getSize().y);
+	sf::Vector2f mouseLocation1,mouseLocation2;
 	bool quit = 0;
 	size_t widthPen = 0, heightPen = 0; // Literally the location in window to draw (relative to top left)
 	int gradient; // Will be used for when the calculation function returns a non-0, non-100 value
-	Complx input(-3, 2); // The real,imag value to begin drawing from (on complex plane)
 
 						 // The following values will be able to be user-defined if given time to implement that
-	double scale = 1.0, // pixel density of the below rectangle shape for drawing the basins
-		minReal = -3.0; // minimum real values to display on 'graph'
-		//minImag = -2.0, // likewise for imaginary values
-		//maxReal = 1.0,
-		//maxImag = 2.0;
+	double scale = 3.0, // pixel density of the below rectangle shape for drawing the basins
+		minReal = topLeft.x, // values to display on 'graph'
+		maxImag = topLeft.y,
+		maxReal = botRight.x,
+		minImag = botRight.y, 
+		graphSize = abs(minReal - maxReal); // Used to scale the drawing of rectangles relative to
+																		// window size while keeping a graph spanning the given units
 
+	Complx input(minReal, maxImag); // The real,imag value to begin drawing from (on complex plane)
 	sf::Event basinEvent;
 	sf::Text quitText("Press 'q' to quit", fnt, 12u);
 
@@ -1129,6 +1134,29 @@ void basins(sf::RenderWindow& window, sf::Font fnt)
 			if (basinEvent.type == sf::Event::KeyPressed)
 				if (basinEvent.key.code == sf::Keyboard::Q)
 					quit = 1;
+
+			if(basinEvent.type == sf::Event::MouseButtonPressed)
+			{
+				if(basinEvent.mouseButton.button == sf::Mouse::Left)
+				{
+					mouseLocation1 = sf::Vector2f(sf::Mouse::getPosition(window)); // Gets mouse position relative to window
+					mouseLocation1.x = (graphSize * scale / windowSize.x) * mouseLocation1.x; // Adjusts it to graphSize
+					mouseLocation1.y = (graphSize * scale / windowSize.y) * mouseLocation1.y; 
+				}
+			}
+			if(basinEvent.type == sf::Event::MouseButtonReleased)
+			{
+				if(basinEvent.mouseButton.button == sf::Mouse::Left)
+				{
+					mouseLocation2 = sf::Vector2f(sf::Mouse::getPosition(window));
+					mouseLocation2.x = (graphSize * scale / windowSize.x) * mouseLocation2.x;
+					mouseLocation2.y = (graphSize * scale / windowSize.y) * mouseLocation2.y; 
+					if (mouseLocation1.x < mouseLocation2.x && mouseLocation1.y > mouseLocation2.y)
+						basins(window, fnt, sf::Vector2f(mouseLocation1), sf::Vector2f(mouseLocation2));
+					else
+						basins(window,fnt,sf::Vector2f(mouseLocation2), sf::Vector2f(mouseLocation1));
+				}
+			}
 		}
 				
 		if (widthPen <= windowSize.x && heightPen <= windowSize.y)
@@ -1136,7 +1164,7 @@ void basins(sf::RenderWindow& window, sf::Font fnt)
 			if (widthPen >= windowSize.x) // Checks for end of working line
 			{
 				input.real(minReal);
-				input.imag(input.imag() - 4 * scale / windowSize.y); // Reduces the imaginary value of input by a value relative to screensize
+				input.imag(input.imag() - graphSize * scale / windowSize.y); // Reduces the imaginary value of input by a value relative to screensize
 				widthPen = 0;
 				heightPen += scale; // Moves down the screen one unit
 				if (heightPen > windowSize.y) // End case
@@ -1158,9 +1186,12 @@ void basins(sf::RenderWindow& window, sf::Font fnt)
 				break;
 			}
 
-			input.real(input.real() + 4 * scale / windowSize.x); // Increases the real value of the input by a value relative to screensize
+			// Increases the real value of the input by a value relative to screensize
+			input.real(input.real() + graphSize * scale / windowSize.x); 
 			widthPen += scale;
 		} 
+
+		std::cout << "Calculated " << input << std::endl;
 
 		canvas.draw(ink); // Draws the rectangle to an offscreen texture
 		canvas.display(); // Displays said rectangle (off-screen)
