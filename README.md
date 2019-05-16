@@ -21,3 +21,12 @@ Project 3: SFML complex numbers excercises
 	
 	Notes: Everything necessary has been completed, and then some. Would like
 	to clean some small QOL things up if I have time.
+
+
+Project 4: Binary Search Tree/Rathof Game
+	
+	Completion: ~80%
+	
+	Notes: Basic functionality done, need to document the code and clean up.
+	Large amount of redundant code/unused code due to anticipation of expanding
+	on the project.
